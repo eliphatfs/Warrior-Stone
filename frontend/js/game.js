@@ -5,8 +5,8 @@ var enemyDeck = [];
 var myHand = [];
 var enemyHand = [];
 var whoFirst = Math.random() < 0.5 ? 1 : 2;
-var me = {health: 30, armor: 0, job: WARRIOR};
-var enemy = {health: 30, armor: 0, job: WARRIOR};
+var me = {health: 30, armor: 0, job: WARRIOR, mana: 0};
+var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0};
 var state = "linking";
 var exchangeCardPool = [];
 var round = 0;
@@ -38,6 +38,7 @@ function reprCardDetailed(card) {
 function rebuildHero() {
     $("#EH")[0].innerHTML = enemy.health;
     $("#EA")[0].innerHTML = enemy.armor;
+    $("#EM")[0].innerHTML = enemy.armor;
     $("#ECH")[0].innerHTML = enemyHand.length;
     $("#ECD")[0].innerHTML = enemyDeck.length;
     
@@ -66,6 +67,16 @@ function myRound() {
     if (round % 2 === 1 && whoFirst === target) return true;
     if (round % 2 === 0 && whoFirst !== target) return true;
     return false;
+}
+
+function roundStart() {
+    if (myRound()) {
+        me.mana = Math.ceil(round / 2);
+    } else {
+        enemy.mana = Math.ceil(round / 2);
+    }
+    $("#ACT")[0].disabled = !myRound();
+    $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
 }
 
 function messageHandler(msg) {
@@ -100,17 +111,36 @@ function messageHandler(msg) {
         for (var i=0; i<msg.op.length; i++) {
             enemyHand.push(enemyDeck.shift());
         }
+        if (enemyHand.length === 4)
+            enemyHand.push(ALL_CARDS[17]);
         rebuildHero();
         var todo = function() {
             if (state == "waiting exchange") {
                 state = "round";
                 round = 1;
-                $("#ACT")[0].disabled = !myRound();
-                $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
-            } else setTimeout(todo, 1000);
+                roundStart();
+            } else setTimeout(todo, 500);
         }
-        setTimeout(todo, 1000);
+        setTimeout(todo, 500);
     }
+}
+
+function acknowledgeMessage() {
+    $.ajax({
+        url: BASE_ADDR + '/acknowledge_message',
+        type: 'post',
+        data: JSON.stringify({
+            "room": room,
+            "target": target
+        }),
+        dataType: 'json',
+        success: function(resp) {
+            setTimeout(fetchMessage, 30);
+        },
+        error: function(xhr, err, opt) {
+            doAlert("您因为断线而输掉了比赛。");
+        }
+    });
 }
 
 function fetchMessage() {
@@ -124,7 +154,7 @@ function fetchMessage() {
         dataType: 'json',
         success: function(resp) {
             messageHandler(resp.data);
-            setTimeout(fetchMessage, 100);
+            acknowledgeMessage();
         },
         error: function(xhr, err, opt) {
             setTimeout(fetchMessage, 100);
@@ -163,7 +193,10 @@ function act() {
     if (state == "changing card") {
         for (var i=myHand.length; i<(target === whoFirst ? 3 : 4); i++)
             myHand.push(myDeck.shift());
+        if (myHand.length === 4)
+            myHand.push(ALL_CARDS[17]);
         rebuildHand();
+        rebuildHero();
         state = "waiting exchange";
         $("#ACT")[0].disabled = true;
         $("#ACT")[0].innerHTML = "等待对手换牌..";
