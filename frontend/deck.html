@@ -1,0 +1,65 @@
+<html>
+<head>
+    <title>Decks - Warrior Stone</title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <ul id="card_list">
+    </ul>
+    <input type="text" placeholder="Deck Name..." id="deck_name" />
+    <button type="button" onclick="save()">Save</button>
+    <button type="button" onclick="load()">Load</button>
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/helper.js"></script>
+    <script src="js/deck.js"></script>
+    <script language="javascript">
+        var theDeck = [];
+        function displayCard(cardid) {
+            var proto = '<li>$(NAME) 费用$(COST) $(TYPE) $(DESC) <button type="button" onclick="addCardToDeck($(ID))">+</button><span>&nbsp;</span><button type="button" onclick="removeCardFromDeck($(ID))">-</button><span>&nbsp;x</span><span id="count_$(ID)">0</span></li>';
+            while (proto.indexOf("$(ID)") != -1)
+                proto = proto.replace("$(ID)", cardid);
+            var card = ALL_CARDS[cardid];
+            proto = proto.replace("$(NAME)", card.name || "未命名");
+            proto = proto.replace("$(COST)", card.cost);
+            proto = proto.replace("$(DESC)", card.description || "无描述");
+            proto = proto.replace("$(TYPE)", card.type == "S" ? "法术" : card.type == "M" ? "随从" : card.type == "W" ? "武器" : "未知");
+            $("#card_list")[0].innerHTML += proto;
+        }
+        
+        function addCardToDeck(cardid) {
+            if (theDeck.filter(function(x) { return x == cardid; }).length >= 2) return;
+            if (theDeck.length >= 30) { doAlert("已经满30张"); return; }
+            theDeck.push(cardid);
+            $("#count_" + cardid)[0].innerHTML = theDeck.filter(function(x) { return x == cardid; }).length;
+        }
+        
+        function removeCardFromDeck(cardid) {
+            var oldDeck = theDeck;
+            theDeck = [];
+            var flag = true;
+            for (var i=0; i<oldDeck.length; i++) {
+                if (flag && oldDeck[i] == cardid) flag = false;
+                else theDeck.push(oldDeck[i]);
+            }
+            $("#count_" + cardid)[0].innerHTML = theDeck.filter(function(x) { return x == cardid; }).length;
+        }
+        
+        function save() {
+            var deck = "";
+            theDeck = theDeck.sort();
+            for (var i=0; i<theDeck.length; i++) {
+                if (i < theDeck.length - 1 && theDeck[i] === theDeck[i + 1]) {
+                    deck += ALL_CARDS[theDeck[i]].name + "x2 ";
+                    i++;
+                }
+                else deck += ALL_CARDS[theDeck[i]].name + " ";
+            }
+            deck += "\n";
+            if (theDeck.length < 30) doAlert(theDeck.length + "/30:\n" + deck + "未满30张");
+            else doConfirm(theDeck.length + "/30:\n" + deck + "是否保存至服务器？");
+        }
+        
+        for (var i=0; i<ALL_CARDS.length; i++) displayCard(i);
+    </script>
+</body>
+</html>
