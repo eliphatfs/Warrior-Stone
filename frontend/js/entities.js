@@ -1,3 +1,10 @@
+var timeStamp = 0;
+
 function Minion(card) {
-    return {card: card, health: card.health, damage: card.damage, special: card.special};
+    var minion = $.extend(true, {}, card);
+    minion.card = card;
+    minion.timeStamp = timeStamp;
+    minion.sleeping = true;
+    timeStamp++;
+    return minion;
 }

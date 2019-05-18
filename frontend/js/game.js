@@ -81,6 +81,10 @@ function roundStart() {
         enemy.mana = Math.ceil(round / 2);
         drawCard(myFriend(), 1);
     }
+    for (var i=0; i<myMinion.length; i++)
+        myMinion[i].sleeping = false;
+    for (var i=0; i<enemyMinion.length; i++)
+        enemyMinion[i].sleeping = false;
     $("#ACT")[0].disabled = !myRound();
     $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
     rebuildHero();
@@ -88,11 +92,13 @@ function roundStart() {
 
 function messageHandler(msg) {
     if (msg.type == "play_card") {
+        doAlert("敌方使用了：\n" + reprCardDetailed(enemyHand[msg.index]));
         if (enemyHand[msg.index].type === "M") {
             enemyMinion.push(Minion(enemyHand[msg.index]));
             rebuildMinions();
         }
         enemyHand.splice(msg.index, 1);
+        rebuildHero();
     }
     else if (msg.type == "enemy_deck") {
         enemyDeck = msg.deck;
@@ -149,12 +155,12 @@ function rebuildMinions() {
         var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
         proto = proto.replace("$(NAME)", card.name || "未命名");
         proto = proto.replace("$(HP)", myMinion[i].health);
-        proto = proto.replace("$(OWNER)", "0");
+        proto = proto.replace("$(OWNER)", target);
         proto = proto.replace("$(ID)", i);
-        proto = proto.replace("$(OWNER)", "0");
+        proto = proto.replace("$(OWNER)", target);
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ATK)", myMinion[i].damage);
-        proto = proto.replace("$(DESC)", (myMinion[i].special & TAUNT) ? "嘲讽" : "随从");
+        proto = proto.replace("$(DESC)", ((myMinion[i].special & TAUNT) ? "嘲讽" : "") + (myMinion[i].sleeping ? "Zzzz": "随从"));
         $("#FMS")[0].innerHTML += proto;
     }
     $("#EMS")[0].innerHTML = "";
@@ -163,12 +169,12 @@ function rebuildMinions() {
         var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
         proto = proto.replace("$(NAME)", card.name || "未命名");
         proto = proto.replace("$(HP)", enemyMinion[i].health);
-        proto = proto.replace("$(OWNER)", "1");
-        proto = proto.replace("$(OWNER)", "1");
+        proto = proto.replace("$(OWNER)", myFriend());
+        proto = proto.replace("$(OWNER)", myFriend());
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ATK)", enemyMinion[i].damage);
-        proto = proto.replace("$(DESC)", (enemyMinion[i].special & TAUNT) ? "嘲讽" : "随从");
+        proto = proto.replace("$(DESC)", ((enemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (enemyMinion[i].sleeping ? "Zzzz": "随从"));
         $("#EMS")[0].innerHTML += proto;
     }
 }
@@ -242,9 +248,15 @@ function hitCard(index) {
                 me.mana -= myHand[index].cost;
                 var extras = [];
                 
+                for (var i=0; i<myMinion.length; i++)
+                    if (myMinion[i].useevent > 0)
+                        activateEffect(myMinion[i].useevent, {hero: target, index: index}, extras, true, function(a,b,c){});
+                
                 if (myHand[index].type === "M") {
                     myMinion.push(Minion(myHand[index]));
                     rebuildMinions();
+                } else if (myHand[index].type === "S") {
+                    activateEffect(myHand[index].useevent, {hero: target, index: index}, extras, true, function(a,b,c){});
                 }
                 
                 sendMessage({"type": "play_card", "index": index, "extras": extras});

@@ -1,5 +1,14 @@
-function baseEffect(eventData, extras, isWrite) {
+function baseEffect(eventData, extras, isWrite, then) {
     
+}
+
+function moreManaEffect(eventData, extras, isWrite, then) {
+    if (eventData.hero === target)
+        my.mana += 1;
+    else
+        enemy.mana += 1;
+    rebuildHero();
+    then(eventData, extras, isWrite);
 }
 
 function drawCard(hero, count) {
@@ -34,4 +43,13 @@ function drawCard(hero, count) {
         }
     rebuildHand();
     rebuildHero();
+}
+
+var ALL_EFFECTS = {
+    "15": moreManaEffect
+}
+
+function activateEffect(effect, eventData, extras, isWrite, then) {
+    if (effect === 0) return;
+    ALL_EFFECTS[effect + ""](eventData, extras, isWrite, then);
 }
