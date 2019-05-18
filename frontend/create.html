@@ -1,0 +1,18 @@
+<html>
+<head>
+    <title>Create Room - Warrior Stone</title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <input type="text" placeholder="Room Number..." id="room_number" />
+    <input type="text" placeholder="Deck Name..." id="deck_name" />
+    <button type="button" onclick="create()">Create!</button>
+    <p><a href="index.html">Back to Menu</a></p>
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script>
+        function create() {
+            window.location.href = "play.html?target=1&room=" + $("#room_number")[0].value + "&deck=" + $("#deck_name")[0].value;
+        }
+    </script>
+</body>
+</html>
