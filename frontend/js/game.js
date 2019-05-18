@@ -7,8 +7,8 @@ var enemyHand = [];
 var myMinion = [];
 var enemyMinion = [];
 var whoFirst = Math.random() < 0.5 ? 1 : 2;
-var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1};
-var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1};
+var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true};
+var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true};
 var state = "linking";
 var selectState = "idle";
 var exchangeCardPool = [];
@@ -44,12 +44,14 @@ function rebuildHero() {
     $("#EM")[0].innerHTML = enemy.mana;
     $("#ECH")[0].innerHTML = enemyHand.length;
     $("#ECD")[0].innerHTML = enemyDeck.length;
+    $("#EHS")[0].innerHTML = enemy.skillOn ? "可用" : "已使用";
     
     $("#FH")[0].innerHTML = me.health;
     $("#FA")[0].innerHTML = me.armor;
     $("#FM")[0].innerHTML = me.mana;
     $("#FCH")[0].innerHTML = myHand.length;
     $("#FCD")[0].innerHTML = myDeck.length;
+    $("#FHS")[0].innerHTML = me.skillOn ? "可用" : "已使用";
 }
 
 function rebuildHand() {
@@ -88,16 +90,19 @@ function roundStart() {
     $("#ACT")[0].disabled = !myRound();
     $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
     rebuildHero();
+    rebuildMinions();
 }
 
 function messageHandler(msg) {
     if (msg.type == "play_card") {
         doAlert("敌方使用了：\n" + reprCardDetailed(enemyHand[msg.index]));
-        if (enemyHand[msg.index].type === "M") {
-            enemyMinion.push(Minion(enemyHand[msg.index]));
-            rebuildMinions();
-        }
-        enemyHand.splice(msg.index, 1);
+        playCard(myFriend(), msg.extras, msg.index);
+    }
+    else if (msg.type == "use_skill") {
+        doAlert("敌方使用了英雄技能");
+        enemy.mana -= 2;
+        enemy.armor += 2;
+        enemy.skillOn = false;
         rebuildHero();
     }
     else if (msg.type == "enemy_deck") {
@@ -231,6 +236,58 @@ function sendMessage(content) {
     });
 }
 
+function playCard(hero, extras, index) {
+    var hand = hero === target ? myHand : enemyHand;
+    var minion = hero === target ? myMinion : enemyMinion;
+    var eminion = hero !== target ? myMinion : enemyMinion;
+    var he = hero === target ? me : enemy;
+    he.mana -= hand[index].cost;
+    var isWrite = hero === target;
+    
+    for (var i=0; i<minion.length; i++)
+        if (minion[i].useevent > 0)
+            activateEffect(minion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
+    for (var i=0; i<eminion.length; i++)
+        if (eminion[i].useevent > 0)
+            activateEffect(eminion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
+    
+    var defered = false;
+    if (hand[index].type === "M") {
+        if (hand[index].battlecry > 0) {
+            defered = true;
+            activateEffect(hand[index].battlecry, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
+                minion.push(Minion(hand[index]));
+                rebuildMinions();
+                if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
+                hand.splice(index, 1);
+                
+                rebuildHand();
+                rebuildHero();
+            });
+        } else {
+            minion.push(Minion(hand[index]));
+            rebuildMinions();
+        }
+    } else if (hand[index].type === "S") {
+        defered = true;
+        activateEffect(hand[index].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
+            if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
+            hand.splice(index, 1);
+            
+            rebuildHand();
+            rebuildHero();
+        });
+    }
+    
+    if (!defered) {
+        if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
+        hand.splice(index, 1);
+        
+        rebuildHand();
+        rebuildHero();
+    }
+}
+
 function hitCard(index) {
     if (state == "changing card") {
         doConfirm("更换这张卡牌吗？\n" + reprCardDetailed(myHand[index]), function() {
@@ -245,25 +302,7 @@ function hitCard(index) {
             doAlert("费用不足！\n" + reprCardDetailed(myHand[index]));
         } else {
             doConfirm("使用这张卡牌吗？\n" + reprCardDetailed(myHand[index]), function() {
-                me.mana -= myHand[index].cost;
-                var extras = [];
-                
-                for (var i=0; i<myMinion.length; i++)
-                    if (myMinion[i].useevent > 0)
-                        activateEffect(myMinion[i].useevent, {hero: target, index: index}, extras, true, function(a,b,c){});
-                
-                if (myHand[index].type === "M") {
-                    myMinion.push(Minion(myHand[index]));
-                    rebuildMinions();
-                } else if (myHand[index].type === "S") {
-                    activateEffect(myHand[index].useevent, {hero: target, index: index}, extras, true, function(a,b,c){});
-                }
-                
-                sendMessage({"type": "play_card", "index": index, "extras": extras});
-                myHand.splice(index, 1);
-                
-                rebuildHand();
-                rebuildHero();
+                playCard(target, new Array(), index);
             });
         }
     } else if (state == "round") {
@@ -289,6 +328,26 @@ function act() {
         round++;
         roundStart();
     }
+}
+
+function hitMinion(hero, index) {
+    if (selectState == "targeting") {
+        
+    }
+}
+
+function skill() {
+    if (me.skillOn) {
+        if (me.mana >= 2) {
+            me.mana -= 2;
+            me.armor += 2;
+            me.skillOn = false;
+            sendMessage({"type": "use_skill"});
+            rebuildHero();
+        } else {
+            doAlert("费用不足：" + me.mana + " < 2！");
+        }
+    } else doAlert("英雄技能当前不可用");
 }
 
 $.ajax({

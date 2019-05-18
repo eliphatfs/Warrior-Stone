@@ -4,7 +4,7 @@ function baseEffect(eventData, extras, isWrite, then) {
 
 function moreManaEffect(eventData, extras, isWrite, then) {
     if (eventData.hero === target)
-        my.mana += 1;
+        me.mana += 1;
     else
         enemy.mana += 1;
     rebuildHero();
