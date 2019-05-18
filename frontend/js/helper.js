@@ -11,3 +11,5 @@ function doConfirm(hint, positiveAction, negativeAction) {
 function doAlert(hint) {
     alert(hint);
 }
+
+BASE_ADDR = "http://127.0.0.1:59095"

@@ -21,7 +21,7 @@
             var card = ALL_CARDS[cardid];
             proto = proto.replace("$(NAME)", card.name || "未命名");
             proto = proto.replace("$(COST)", card.cost);
-            proto = proto.replace("$(DESC)", card.description || "无描述");
+            proto = proto.replace("$(DESC)", (card.type == "M" ? card.damage + "-" + card.health + " " : " ") + (card.description || "无描述"));
             proto = proto.replace("$(TYPE)", card.type == "S" ? "法术" : card.type == "M" ? "随从" : card.type == "W" ? "武器" : "未知");
             $("#card_list")[0].innerHTML += proto;
         }
@@ -56,7 +56,47 @@
             }
             deck += "\n";
             if (theDeck.length < 30) doAlert(theDeck.length + "/30:\n" + deck + "未满30张");
-            else doConfirm(theDeck.length + "/30:\n" + deck + "是否保存至服务器？");
+            else doConfirm(theDeck.length + "/30:\n" + deck + "是否保存至服务器？", function() {
+                $.ajax({
+                    url: BASE_ADDR + '/store_deck',
+                    type: 'post',
+                    data: JSON.stringify({
+                        "name": $("#deck_name")[0].value,
+                        "content": theDeck
+                    }),
+                    dataType: 'json',
+                    success: function(resp) {
+                        console.log(resp);
+                    }
+                });
+            });
+        }
+        
+        function load() {
+            $.ajax({
+                url: BASE_ADDR + '/load_deck',
+                type: 'post',
+                data: JSON.stringify({
+                    "name": $("#deck_name")[0].value
+                }),
+                dataType: 'json',
+                success: function(resp) {
+                    theDeck = [];
+                    for (var i=0; i<resp.data.length; i++)
+                        addCardToDeck(resp.data[i]);
+                    var deck = "";
+                    theDeck = theDeck.sort();
+                    for (var i=0; i<theDeck.length; i++) {
+                        if (i < theDeck.length - 1 && theDeck[i] === theDeck[i + 1]) {
+                            deck += ALL_CARDS[theDeck[i]].name + "x2 ";
+                            i++;
+                        }
+                        else deck += ALL_CARDS[theDeck[i]].name + " ";
+                    }
+                    deck += "\n";
+                    doAlert(theDeck.length + "/30 已加载:\n" + deck);
+                }
+            });
         }
         
         for (var i=0; i<ALL_CARDS.length; i++) displayCard(i);
