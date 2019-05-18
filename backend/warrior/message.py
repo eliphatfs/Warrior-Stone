@@ -27,13 +27,17 @@ async def post_message(request):
 
 @route_table.post("/fetch_message_blocked")
 async def fetch_message(request):
+    msg = None
     try:
         body = await request.json()
         while (rooms[(body["room"], body["target"])].empty()):
             await asyncio.sleep(0.05)
+        msg = rooms[(body["room"], body["target"])].get()
         return web.json_response({
                 "code": 0,
-                "data": rooms[(body["room"], body["target"])].get()
+                "data": msg
                })
     except Exception as exc:
+        if msg is not None:
+            rooms[(body["room"], body["target"])].put(msg)
         return web.json_response({"code": 1, "error": repr(exc)})
