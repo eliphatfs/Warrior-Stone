@@ -4,10 +4,13 @@ var myDeck = [];
 var enemyDeck = [];
 var myHand = [];
 var enemyHand = [];
+var myMinion = [];
+var enemyMinion = [];
 var whoFirst = Math.random() < 0.5 ? 1 : 2;
-var me = {health: 30, armor: 0, job: WARRIOR, mana: 0};
-var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0};
+var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1};
+var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1};
 var state = "linking";
+var selectState = "idle";
 var exchangeCardPool = [];
 var round = 0;
 
@@ -38,12 +41,13 @@ function reprCardDetailed(card) {
 function rebuildHero() {
     $("#EH")[0].innerHTML = enemy.health;
     $("#EA")[0].innerHTML = enemy.armor;
-    $("#EM")[0].innerHTML = enemy.armor;
+    $("#EM")[0].innerHTML = enemy.mana;
     $("#ECH")[0].innerHTML = enemyHand.length;
     $("#ECD")[0].innerHTML = enemyDeck.length;
     
     $("#FH")[0].innerHTML = me.health;
     $("#FA")[0].innerHTML = me.armor;
+    $("#FM")[0].innerHTML = me.mana;
     $("#FCH")[0].innerHTML = myHand.length;
     $("#FCD")[0].innerHTML = myDeck.length;
 }
@@ -72,8 +76,10 @@ function myRound() {
 function roundStart() {
     if (myRound()) {
         me.mana = Math.ceil(round / 2);
+        drawCard(target, 1);
     } else {
         enemy.mana = Math.ceil(round / 2);
+        drawCard(myFriend(), 1);
     }
     $("#ACT")[0].disabled = !myRound();
     $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
@@ -81,7 +87,14 @@ function roundStart() {
 }
 
 function messageHandler(msg) {
-    if (msg.type == "enemy_deck") {
+    if (msg.type == "play_card") {
+        if (enemyHand[msg.index].type === "M") {
+            enemyMinion.push(Minion(enemyHand[msg.index]));
+            rebuildMinions();
+        }
+        enemyHand.splice(msg.index, 1);
+    }
+    else if (msg.type == "enemy_deck") {
         enemyDeck = msg.deck;
         if (target === 2) whoFirst = msg.who_first;
         for (var i=0; i<enemyDeck.length; i++) {
@@ -126,6 +139,37 @@ function messageHandler(msg) {
     } else if (msg.type == "end_round") {
         round++;
         roundStart();
+    }
+}
+
+function rebuildMinions() {
+    $("#FMS")[0].innerHTML = "";
+    for (var i=0; i<myMinion.length; i++) {
+        var card = myMinion[i].card;
+        var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
+        proto = proto.replace("$(NAME)", card.name || "未命名");
+        proto = proto.replace("$(HP)", myMinion[i].health);
+        proto = proto.replace("$(OWNER)", "0");
+        proto = proto.replace("$(ID)", i);
+        proto = proto.replace("$(OWNER)", "0");
+        proto = proto.replace("$(ID)", i);
+        proto = proto.replace("$(ATK)", myMinion[i].damage);
+        proto = proto.replace("$(DESC)", (myMinion[i].special & TAUNT) ? "嘲讽" : "随从");
+        $("#FMS")[0].innerHTML += proto;
+    }
+    $("#EMS")[0].innerHTML = "";
+    for (var i=0; i<enemyMinion.length; i++) {
+        var card = enemyMinion[i].card;
+        var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
+        proto = proto.replace("$(NAME)", card.name || "未命名");
+        proto = proto.replace("$(HP)", enemyMinion[i].health);
+        proto = proto.replace("$(OWNER)", "1");
+        proto = proto.replace("$(OWNER)", "1");
+        proto = proto.replace("$(ID)", i);
+        proto = proto.replace("$(ID)", i);
+        proto = proto.replace("$(ATK)", enemyMinion[i].damage);
+        proto = proto.replace("$(DESC)", (enemyMinion[i].special & TAUNT) ? "嘲讽" : "随从");
+        $("#EMS")[0].innerHTML += proto;
     }
 }
 
@@ -198,7 +242,13 @@ function hitCard(index) {
                 me.mana -= myHand[index].cost;
                 var extras = [];
                 
+                if (myHand[index].type === "M") {
+                    myMinion.push(Minion(myHand[index]));
+                    rebuildMinions();
+                }
+                
                 sendMessage({"type": "play_card", "index": index, "extras": extras});
+                myHand.splice(index, 1);
                 
                 rebuildHand();
                 rebuildHero();
