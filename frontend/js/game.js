@@ -13,6 +13,8 @@ var state = "linking";
 var selectState = "idle";
 var exchangeCardPool = [];
 var round = 0;
+var targetSelector = function(hero, minionIndex) { return true; };
+var targetingCallback = function(hero, minionIndex) {};
 
 function myFriend() {
     return target === 1 ? 2 : 1;
@@ -212,8 +214,8 @@ function fetchMessage() {
         }),
         dataType: 'json',
         success: function(resp) {
-            messageHandler(resp.data);
             acknowledgeMessage();
+            messageHandler(resp.data);
         },
         error: function(xhr, err, opt) {
             setTimeout(fetchMessage, 100);
@@ -330,9 +332,72 @@ function act() {
     }
 }
 
+function dealDamage(hero, index, damage) {
+    if (index === -1) {
+        var he = hero === target ? me : enemy;
+        if (damage <= he.armor) {
+            he.armor -= damage;
+        } else {
+            damage -= he.armor;
+            he.armor = 0;
+            he.health -= damage;
+            rebuildHero();
+            if (he.health <= 0) {
+                if (me.health <= 0 && enemy.health > 0) doAlert("败  北");
+                if (enemy.health <= 0 && me.health > 0) doAlert("胜利");
+                if (enemy.health <= 0 && me.health <= 0) doAlert("打成平手");
+            }
+        }
+    }
+    else {
+        var minion = hero === target ? myMinion : enemyMinion;
+        minion[index].health -= damage;
+        if (minion[index].health <= 0) {
+            minion.splice(index, 1);
+        }
+        rebuildMinions();
+    }
+}
+
 function hitMinion(hero, index) {
     if (selectState == "targeting") {
-        
+        if (!targetSelector(hero, index)) {
+            doAlert("选择了无效的目标");
+        } else {
+            targetingCallback(hero, index);
+            selectState = "";
+        }
+    } else if (myRound() && hero === target && !myMinion[index].sleeping) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) { return hero !== index; };
+        targetingCallback = function(hero, index) {
+            dealDamage(hero, index, myMinion[index].damage);
+            myMinion[index].sleeping = true;
+        }
+    } else {
+        doAlert(reprCardDetailed(myMinion[index]));
+    }
+}
+
+function hitEnemyHero() {
+    if (selectState == "targeting") {
+        if (!targetSelector(myFriend(), -1)) {
+            doAlert("选择了无效的目标");
+        } else {
+            targetingCallback(myFriend(), -1);
+            selectState = "";
+        }
+    }
+}
+
+function hitMyHero() {
+    if (selectState == "targeting") {
+        if (!targetSelector(target, -1)) {
+            doAlert("选择了无效的目标");
+        } else {
+            targetingCallback(target, -1);
+            selectState = "";
+        }
     }
 }
 
