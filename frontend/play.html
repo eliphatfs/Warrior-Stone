@@ -1,0 +1,112 @@
+<html>
+<head>
+    <title>Game - Warrior Stone</title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <div id="wait">等待对手连线……</div>
+    <div id="game" style="display: none">
+    <p style="text-align: center"><button type="button" style="width:70%; text-align: center">
+        敌方英雄 - <span id="EJ">战士</span> 武器 <span id="EW">N/A</span>
+        <br />血量 <span id="EH">30</span> 护甲 <span id="EA">0</span>
+        <br />手牌 <span id="ECH">3</span> 牌库 <span id="ECD">27</span>
+    </button>
+    <button type="button" style="width:25%; text-align: center">
+        技能[<span id="EHSC">2</span>]<br /><span id="EHSD">获得2护甲</span><br /><span id="EHS">可用</span>
+    </button></p>
+    <p style="text-align: center"><button type="button" style="min-width:13%; text-align: center; display: none" id="EM0">
+        <span id="EM0N">奴隶主
+        <br />攻 <span id="EM0D">3</span>
+        <br />血 <span id="EM0H">3</span>
+        <br /><span id="EM0S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; background-color: #daa; display: none" id="EM1">
+        <span id="EM1N">奴隶主
+        <br />攻 <span id="EM1D">3</span>
+        <br />血 <span id="EM1H">3</span>
+        <br /><span id="EM1S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="EM2">
+        <span id="EM2N">奴隶主
+        <br />攻 <span id="EM2D">3</span>
+        <br />血 <span id="EM2H">3</span>
+        <br /><span id="EM2S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="EM3">
+        <span id="EM3N">奴隶主
+        <br />攻 <span id="EM3D">3</span>
+        <br />血 <span id="EM3H">3</span>
+        <br /><span id="EM3S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="EM4">
+        <span id="EM4N">奴隶主
+        <br />攻 <span id="EM4D">3</span>
+        <br />血 <span id="EM4H">3</span>
+        <br /><span id="EM4S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="EM5">
+        <span id="EM5N">奴隶主
+        <br />攻 <span id="EM5D">3</span>
+        <br />血 <span id="EM5H">3</span>
+        <br /><span id="EM5S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="EM6">
+        <span id="EM6N">奴隶主
+        <br />攻 <span id="EM6D">3</span>
+        <br />血 <span id="EM6H">3</span>
+        <br /><span id="EM6S">嘲讽</span>
+    </button></p>
+    <hr />
+    <p style="text-align: center"><button type="button" style="min-width:13%; text-align: center; display: none" id="FM0">
+        <span id="FM0N">奴隶主
+        <br />攻 <span id="FM0D">3</span>
+        <br />血 <span id="FM0H">3</span>
+        <br /><span id="FM0S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; background-color: #daa; display: none" id="FM1">
+        <span id="FM1N">奴隶主
+        <br />攻 <span id="FM1D">3</span>
+        <br />血 <span id="FM1H">3</span>
+        <br /><span id="FM1S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="FM2">
+        <span id="FM2N">奴隶主
+        <br />攻 <span id="FM2D">3</span>
+        <br />血 <span id="FM2H">3</span>
+        <br /><span id="FM2S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="FM3">
+        <span id="FM3N">奴隶主
+        <br />攻 <span id="FM3D">3</span>
+        <br />血 <span id="FM3H">3</span>
+        <br /><span id="FM3S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="FM4">
+        <span id="FM4N">奴隶主
+        <br />攻 <span id="FM4D">3</span>
+        <br />血 <span id="FM4H">3</span>
+        <br /><span id="FM4S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="FM5">
+        <span id="FM5N">奴隶主
+        <br />攻 <span id="FM5D">3</span>
+        <br />血 <span id="FM5H">3</span>
+        <br /><span id="FM5S">嘲讽</span>
+    </button><button type="button" style="min-width:13%; text-align: center; display: none" id="FM6">
+        <span id="FM6N">奴隶主
+        <br />攻 <span id="FM6D">3</span>
+        <br />血 <span id="FM6H">3</span>
+        <br /><span id="FM6S">嘲讽</span>
+    </button></p>
+    <p style="text-align: center"><button type="button" style="width:70%; text-align: center">
+        你 - <span id="FJ">战士</span> 武器 <span id="FW">N/A</span>
+        <br />血量 <span id="FH">30</span> 护甲 <span id="FA">0</span>
+        <br />手牌 <span id="FCH">3</span> 牌库 <span id="FCD">27</span>
+    </button>
+    <button type="button" style="width:25%; text-align: center">
+        技能[<span id="FHSC">2</span>]<br /><span id="FHSD">获得2护甲</span><br /><span id="FHS">可用</span>
+    </button>
+    </p>
+    <p style="text-align: center">
+        <button type="button" style="width:25%; text-align: center;" id="ACT" onclick="act()" disabled>结束回合</button>
+    </p>
+    <hr />
+    <p id="Hand">
+        
+    </p>
+    </div>
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <script src="js/helper.js"></script>
+    <script src="js/deck.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
