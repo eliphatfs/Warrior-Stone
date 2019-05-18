@@ -77,6 +77,7 @@ function roundStart() {
     }
     $("#ACT")[0].disabled = !myRound();
     $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
+    rebuildHero();
 }
 
 function messageHandler(msg) {
@@ -122,6 +123,9 @@ function messageHandler(msg) {
             } else setTimeout(todo, 500);
         }
         setTimeout(todo, 500);
+    } else if (msg.type == "end_round") {
+        round++;
+        roundStart();
     }
 }
 
@@ -186,6 +190,22 @@ function hitCard(index) {
             rebuildHero();
             rebuildHand();
         });
+    } else if (myRound()) {
+        if (myHand[index].cost > me.mana) {
+            doAlert("费用不足！\n" + reprCardDetailed(myHand[index]));
+        } else {
+            doConfirm("使用这张卡牌吗？\n" + reprCardDetailed(myHand[index]), function() {
+                me.mana -= myHand[index].cost;
+                var extras = [];
+                
+                sendMessage({"type": "play_card", "index": index, "extras": extras});
+                
+                rebuildHand();
+                rebuildHero();
+            });
+        }
+    } else if (state == "round") {
+        doAlert("卡牌详情：\n" + reprCardDetailed(myHand[index]));
     }
 }
 
@@ -201,6 +221,11 @@ function act() {
         $("#ACT")[0].disabled = true;
         $("#ACT")[0].innerHTML = "等待对手换牌..";
         sendMessage({"type": "exchange_card", "op": exchangeCardPool});
+    }
+    else if (myRound()) {
+        sendMessage({"type": "end_round"});
+        round++;
+        roundStart();
     }
 }
 
