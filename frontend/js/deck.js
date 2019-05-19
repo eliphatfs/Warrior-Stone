@@ -86,5 +86,8 @@ var ALL_CARDS = [
     endescriptify("绝命乱斗", "随机选择一个随从，消灭其他所有随从")(CardSpell(5, 12)),
     endescriptify("洛欧塞布", "战吼：下回合你的对手法术法力消耗+5")(CardMinion(5, 5, 5, 0, 13, 0, 0, 0, 0)),
     endescriptify("大帝", "回合结束时，你的所有手牌法力消耗-1")(CardMinion(6, 5, 5, 0, 0, 0, 0, 14, 0)),
-    endescriptify("幸运币", "获得一个额外的法力水晶")(CardSpell(0, 15))
+    endescriptify("幸运币", "获得一个额外的法力水晶")(CardSpell(0, 15)),
+    endescriptify("蜘蛛坦克", "机械")(CardMinion(3, 3, 4, 0, 0, 0, 0, 0, 0)),
+    endescriptify("冰风雪人", "")(CardMinion(4, 4, 5, 0, 0, 0, 0, 0, 0)),
+    endescriptify("淡水鳄", "野兽")(CardMinion(2, 2, 3, 0, 0, 0, 0, 0, 0))
 ];

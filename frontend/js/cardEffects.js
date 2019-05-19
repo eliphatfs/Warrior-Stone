@@ -120,8 +120,8 @@ function battleDrawCard(eventData, extras, isWrite, then) {
         var count = 0;
         if (he.health < 30) ++count;
         for (var i=0; i<minion.length; i++) if (minion[i].health < minion[i].maxHealth) ++count;
-        drawCard(eventData.hero, count);
         then(eventData, extras, isWrite);
+        drawCard(eventData.hero, count);
     });
 }
 
@@ -191,6 +191,92 @@ function wakeSleep(eventData, extras, isWrite, then) {
     }
 }
 
+function battleBurn(eventData, extras, isWrite, then) {
+    var he = eventData.hero === target ? me : enemy;
+    he.minionNoDeath = true;
+    then(eventData, extras, isWrite);
+    drawCard(eventData.hero, 1);
+}
+
+function messyFight(eventData, extras, isWrite, then) {
+    var totalCount = myMinion.length + enemyMinion.length;
+    if (totalCount < 2) {
+        doAlert("没有足够多的随从");
+    } else {
+        if (isWrite) {
+            var gid = randInt(0, totalCount);
+            var keepH = gid >= myMinion.length ? target : myFriend();
+            var keepI = gid >= myMinion.length ? gid - myMinion.length : gid;
+            extras.push(keepH);
+            extras.push(keepI);
+            for (var h=1; h<=2; h++) {
+                for (var i=0; i<7; i++) {
+                    if (keepI == i && keepH == h) continue;
+                    if (!getMinion(h, i)) continue;
+                    spellAttack(getMinion(h, i).health, h, i, "你使用绝命乱斗");
+                }
+            }
+            then(eventData, extras, isWrite);
+        } else {
+            var keepH = extras.shift();
+            var keepI = extras.shift();
+            for (var h=1; h<=2; h++) {
+                for (var i=0; i<7; i++) {
+                    if (keepI == i && keepH == h) continue;
+                    if (!getMinion(h, i)) continue;
+                    spellAttack(getMinion(h, i).health, h, i, "敌方英雄使用绝命乱斗");
+                }
+            }
+            then(eventData, extras, isWrite);
+        }
+    }
+}
+
+// 每有一个随从受到伤害，抽一张牌
+function draw1card(eventData, extras, isWrite, then) {
+    if (eventData.dsti !== -1)
+        delayedCall(function() { drawCard(eventData.owner, 1); });
+    then(eventData, extras, isWrite);
+}
+
+// 受到伤害，抽一张牌
+function draw1cardWhenHit(eventData, extras, isWrite, then) {
+    if (eventData.dsti === eventData.myIndex && eventData.dsth === eventData.owner)
+        delayedCall(function() { drawCard(eventData.owner, 1); });
+    then(eventData, extras, isWrite);
+}
+
+// 奴隶主
+function lord(eventData, extras, isWrite, then) {
+    if (eventData.dsti === eventData.myIndex && eventData.dsth === eventData.owner && !eventData.killing) {
+        if (!getMinion(eventData.dsth, 6))
+            delayedCall(function() {
+                if (eventData.dsth === target)
+                    myMinion.splice(eventData.myIndex + 1, 0, Minion(ALL_CARDS[13]));
+                else
+                    enemyMinion.splice(eventData.myIndex + 1, 0, Minion(ALL_CARDS[13]));
+            });
+    }
+    then(eventData, extras, isWrite);
+}
+
+// 大帝
+function costSub1(eventData, extras, isWrite, then) {
+    if (eventData.whoseRoundEnd != eventData.owner) return;
+    var hand = eventData.whoseRoundEnd === target ? myHand : enemyHand;
+    for (var i=0; i<hand.length; i++) {
+        if (hand[i].cost > 0) hand[i].cost -= 1;
+    }
+    delayedCall(function() { rebuildHand(); then(eventData, extras, isWrite); });
+}
+
+// 洛欧塞布
+function costAdd5(eventData, extras, isWrite, then) {
+    var he = eventData.hero === target ? enemy : me;
+    he.spellCost5More = true;
+    delayedCall(function() { rebuildHand(); then(eventData, extras, isWrite); });
+}
+
 var ALL_EFFECTS = {
     "15": moreManaEffect,
     "1": innerBreak,
@@ -199,7 +285,14 @@ var ALL_EFFECTS = {
     "4": battleDrawCard,
     "5": wakeSleep,
     "6": do1ToAllMinions,
-    "10": letsDraw2Cards
+    "7": draw1card,
+    "8": battleBurn,
+    "9": draw1cardWhenHit,
+    "10": letsDraw2Cards,
+    "11": lord,
+    "12": messyFight,
+    "13": costAdd5,
+    "14": costSub1
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {

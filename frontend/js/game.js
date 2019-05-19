@@ -7,8 +7,8 @@ var enemyHand = [];
 var myMinion = [];
 var enemyMinion = [];
 var whoFirst = Math.random() < 0.5 ? 1 : 2;
-var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true};
-var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true};
+var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false};
+var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false};
 var state = "linking";
 var selectState = "idle";
 var exchangeCardPool = [];
@@ -46,11 +46,21 @@ function roundStart() {
                 enemyHand.splice(i, 1);
                 i--;
             }
+        me.minionNoDeath = false;
+        enemy.minionNoDeath = false;
+        for (var h=1; h<=2; h++)
+            for (var i=0; i<7; i++)
+                if (getMinion(h, i) && getMinion(h, i).roundend > 0) {
+                    activateEffect(getMinion(h, i).roundend, {owner: h, myIndex: i, whoseRoundEnd: myRound() ? myFriend() : target}, [], true, function(a, b, c) {
+                    });
+                }
         if (myRound()) {
+            enemy.spellCost5More = false;
             me.mana = Math.ceil(round / 2);
             if (me.mana > 10) me.mana = 10;
             drawCard(target, 1);
         } else {
+            me.spellCost5More = false;
             enemy.mana = Math.ceil(round / 2);
             if (enemy.mana > 10) enemy.mana = 10;
             drawCard(myFriend(), 1);
@@ -256,17 +266,57 @@ function dealDamage(hero, index, damage, source) {
         minion[index].health -= damage;
         var defered = false;
         if (minion[index].health <= 0) {
-            gameHistory = source + "消灭了" + minion[index].name + "\n" + gameHistory;
-            attackEventQueue.push([minion[index].timeStamp, function() {
-                if (minion[index].deathrattle > 0) {
-                    minion[index].highlight = true;
-                    rebuildMinions();
-                    var thiz = minion.splice(index, 1)[0];
-                    defered = true;
-                    activateEffect(thiz.deathrattle, {hero: hero}, [], true, function(a, b, c) {
+            var he = hero === target ? me : enemy;
+            if (he.minionNoDeath) {
+                minion[index].health = 1;
+                attackEventQueue.push([minion[index].timeStamp, function() {
+                    for (var h=1; h<=2; h++)
+                        for (var i=0; i<7; i++) {
+                            if (getMinion(h, i) && getMinion(h, i).hurtevent > 0) {
+                                defered = true;
+                                activateEffect(getMinion(h, i).hurtevent, {owner: h, myIndex: i, dsti: index, dsth: hero, killing: false}, [], true, function(a, b, c) {
+                                    rebuildMinions();
+                                });
+                            }
+                        }
+                }]);
+            }
+            else {
+                attackEventQueue.push([minion[index].timeStamp, function() {
+                    for (var h=1; h<=2; h++)
+                        for (var i=0; i<7; i++) {
+                            if (getMinion(h, i) && getMinion(h, i).hurtevent > 0) {
+                                defered = true;
+                                activateEffect(getMinion(h, i).hurtevent, {owner: h, myIndex: i, dsti: index, dsth: hero, killing: true}, [], true, function(a, b, c) {
+                                    rebuildMinions();
+                                });
+                            }
+                        }
+                }]);  // TODO: isWrite
+                gameHistory = source + "消灭了" + minion[index].name + "\n" + gameHistory;
+                attackEventQueue.push([minion[index].timeStamp + 100000, function() {
+                    if (minion[index].deathrattle > 0) {
+                        minion[index].highlight = true;
                         rebuildMinions();
-                    });
-                } else minion.splice(index, 1);
+                        var thiz = minion.splice(index, 1)[0];
+                        defered = true;
+                        activateEffect(thiz.deathrattle, {hero: hero}, [], true, function(a, b, c) {
+                            rebuildMinions();
+                        });
+                    } else minion.splice(index, 1);
+                }]);
+            }
+        } else {
+            attackEventQueue.push([minion[index].timeStamp, function() {
+                for (var h=1; h<=2; h++)
+                    for (var i=0; i<7; i++) {
+                        if (getMinion(h, i) && getMinion(h, i).hurtevent) {
+                            defered = true;
+                            activateEffect(getMinion(h, i).hurtevent, {owner: h, myIndex: i, dsti: index, dsth: hero, killing: false}, [], true, function(a, b, c) {
+                                rebuildMinions();
+                            });
+                        }
+                    }
             }]);
         }
         if (!defered) rebuildMinions();
@@ -283,7 +333,7 @@ function hitCard(index) {
             rebuildHand();
         });
     } else if (myRound()) {
-        if (myHand[index].cost > me.mana) {
+        if (myHand[index].cost + (myHand[index].type == "S" && me.spellCost5More ? 5 : 0) > me.mana) {
             doAlert("费用不足！\n" + reprCardDetailed(myHand[index]));
         } else if (myHand[index].type === "M" && myMinion.length >= 7) {
             doAlert("随从位已满！\n" + reprCardDetailed(myHand[index]));

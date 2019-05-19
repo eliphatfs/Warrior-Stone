@@ -52,7 +52,7 @@ function rebuildHand() {
             proto = proto.replace("$(ID)", i);
         var card = myHand[i];
         proto = proto.replace("$(NAME)", card.name || "未命名");
-        proto = proto.replace("$(COST)", card.cost);
+        proto = proto.replace("$(COST)", card.cost + (me.spellCost5More && card.type === 'S' ? "<+5>" : ""));
         proto = proto.replace("$(DESC)", reprType(card) + "<br />" + reprDesc(card));
         $("#Hand")[0].innerHTML += proto;
     }
