@@ -232,10 +232,11 @@ function messyFight(eventData, extras, isWrite, then) {
     }
 }
 
-// 每有一个随从受到伤害，抽一张牌
+// 每有一个随从受到伤害，+1攻击
 function draw1card(eventData, extras, isWrite, then) {
     if (eventData.dsti !== -1)
-        delayedCall(function() { drawCard(eventData.owner, 1); });
+        getMinion(eventData.owner, eventData.myIndex).damage++;
+    delayedCall(function() { rebuildMinions(); });
     then(eventData, extras, isWrite);
 }
 

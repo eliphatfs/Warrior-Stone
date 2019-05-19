@@ -76,7 +76,7 @@ var ALL_CARDS = [
     endescriptify("战斗怒吼", "抽一张牌，本回合内你的随从血量不能<1")(CardSpell(2, 8)),
     endescriptify("战路", "对所有随从造成一点伤害，回响")(CardSpell(2, 3)),
     endescriptify("战斗怒火", "每有一个受伤的友方角色，抽一张牌")(CardSpell(2, 4)),
-    endescriptify("暴乱", "每有一个随从受到伤害，抽一张牌")(CardMinion(3, 2, 4, 0, 0, 0, 7, 0, 0)),
+    endescriptify("暴乱", "每有一个随从受到伤害，+1攻击")(CardMinion(3, 2, 4, 0, 0, 0, 7, 0, 0)),
     endescriptify("战歌", "每当你召唤一个攻击力≤3的随从，获得冲锋")(CardMinion(3, 2, 3, 0, 0, 0, 0, 0, 5)),
     endescriptify("苦痛", "受到伤害时抽一张牌")(CardMinion(3, 1, 3, 0, 0, 0, 9, 0, 0)),
     endescriptify("暴虐食尸鬼", "战吼：对所有随从造成一点伤害")(CardMinion(3, 3, 3, 0, 6, 0, 0, 0, 0)),
