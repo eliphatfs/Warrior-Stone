@@ -2,13 +2,138 @@ function baseEffect(eventData, extras, isWrite, then) {
     
 }
 
+// 幸运币
 function moreManaEffect(eventData, extras, isWrite, then) {
     if (eventData.hero === target)
         me.mana += 1;
     else
         enemy.mana += 1;
-    rebuildHero();
-    then(eventData, extras, isWrite);
+    delayedCall(function() {
+        rebuildHero();
+        then(eventData, extras, isWrite);
+    });
+}
+
+// 怒火中烧
+function innerBreak(eventData, extras, isWrite, then) {
+    if (isWrite) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            return index !== -1;
+        };
+        if (!checkSelectionTargets()) {
+            selectState = "failed";
+            return;
+        }
+        targetingCallback = function(thero, tindex) {
+            extras.push(thero);
+            extras.push(tindex);
+            delayedCall(function(){
+                getMinion(thero, tindex).damage += 2;
+                spellAttack(1, thero, tindex, "你使用怒火中烧");
+            });
+            delayedCall(function(){
+                then(eventData, extras, isWrite);
+            });
+        }
+    } else {
+        var h = extras.shift();
+        var ind = extras.shift();
+        delayedCall(function(){
+            getMinion(h, ind).damage += 2;
+            spellAttack(1, h, ind, "敌方使用怒火中烧");
+        });
+        delayedCall(function() {
+            then(eventData, extras, isWrite);
+        });
+    }
+}
+
+// 斩杀
+function killInperfect(eventData, extras, isWrite, then) {
+    if (isWrite) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            return index !== -1 && getMinion(hero, index).health < getMinion(hero, index).maxHealth;
+        };
+        if (!checkSelectionTargets()) {
+            selectState = "failed";
+            return;
+        }
+        targetingCallback = function(thero, tindex) {
+            extras.push(thero);
+            extras.push(tindex);
+            extras.push(getMinion(thero, tindex).health);
+            delayedCall(function(){
+                spellAttack(getMinion(thero, tindex).health, thero, tindex, "你使用斩杀");
+            });
+            delayedCall(function(){
+                then(eventData, extras, isWrite);
+            });
+        }
+    } else {
+        var h = extras.shift();
+        var ind = extras.shift();
+        var dmg = extras.shift();
+        delayedCall(function(){
+            spellAttack(dmg, h, ind, "敌方使用斩杀");
+        });
+        delayedCall(function() {
+            then(eventData, extras, isWrite);
+        });
+    }
+}
+
+// 对所有随从造成一点伤害
+function do1ToAllMinions(eventData, extras, isWrite, then) {
+    delayedCall(function(){
+        for (var h=1; h<=2; h++)
+            for (var i=0; i<7; i++)
+                if (getMinion(h, i))
+                    spellAttack(1, h, i, reprHero(eventData.hero) + "使用" + getHand(eventData.hero, eventData.index));
+    });
+    delayedCall(function(){
+        then(eventData, extras, isWrite);
+    });
+}
+
+// 战路
+function battleWay(eventData, extras, isWrite, then) {
+    do1ToAllMinions(eventData, extras, isWrite, function() {
+        var card = $.extend(true, {}, ALL_CARDS[5]);
+        then(eventData, extras, isWrite);
+        card.removeOnEOR = true;
+        var hand = isWrite ? myHand : enemyHand;
+        delayedCall(function() {
+            hand.push(card);
+            rebuildHand();
+            rebuildHero();
+        });
+    })
+}
+
+// 战斗怒火
+function battleDrawCard(eventData, extras, isWrite, then) {
+    var he = isWrite ? me : enemy;
+    var minion = isWrite ? myMinion : enemyMinion;
+    delayedCall(function() {
+        var count = 0;
+        if (he.health < 30) ++count;
+        for (var i=0; i<minion.length; i++) if (minion[i].health < minion[i].maxHealth) ++count;
+        drawCard(eventData.hero, count);
+        then(eventData, extras, isWrite);
+    });
+}
+
+// 爆牌鱼
+function letsDraw2Cards(eventData, extras, isWrite, then) {
+    delayedCall(function() {
+        then(eventData, extras, isWrite);
+        drawCard(1, 1);
+        drawCard(2, 1);
+        drawCard(1, 1);
+        drawCard(2, 1);
+    });
 }
 
 function drawCard(hero, count) {
@@ -16,6 +141,8 @@ function drawCard(hero, count) {
         for (var i=0; i<count; i++) {
             if (myDeck.length === 0) {
                 doAlert("你受到了" + me.nextFatigue + "点疲劳伤害");
+                gameHistory = "你受到了" + me.nextFatigue + "点疲劳伤害\n" + gameHistory;
+                dealDamage(target, -1, me.nextFatigue, "疲劳");
                 ++me.nextFatigue;
                 continue;
             }
@@ -31,6 +158,8 @@ function drawCard(hero, count) {
         for (var i=0; i<count; i++) {
             if (enemyDeck.length === 0) {
                 doAlert("敌方英雄受到了" + enemy.nextFatigue + "点疲劳伤害");
+                gameHistory = "敌方英雄受到了" + enemy.nextFatigue + "点疲劳伤害\n" + gameHistory;
+                dealDamage(myFriend(), -1, enemy.nextFatigue, "疲劳");
                 ++enemy.nextFatigue;
                 continue;
             }
@@ -46,7 +175,13 @@ function drawCard(hero, count) {
 }
 
 var ALL_EFFECTS = {
-    "15": moreManaEffect
+    "15": moreManaEffect,
+    "1": innerBreak,
+    "2": killInperfect,
+    "3": battleWay,
+    "4": battleDrawCard,
+    "6": do1ToAllMinions,
+    "10": letsDraw2Cards
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {

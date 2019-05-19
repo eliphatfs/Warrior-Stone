@@ -16,6 +16,9 @@ var round = 0;
 var targetSelector = function(hero, minionIndex) { return true; };
 var targetingCallback = function(hero, minionIndex) {};
 var gameHistory = "";
+var attackEventQueue = [];
+var attackEventWaiter = 0;
+var roundEndQueue = [];
 
 function myFriend() {
     return target === 1 ? 2 : 1;
@@ -29,21 +32,41 @@ function myRound() {
 }
 
 function roundStart() {
-    if (myRound()) {
-        me.mana = Math.ceil(round / 2);
-        drawCard(target, 1);
-    } else {
-        enemy.mana = Math.ceil(round / 2);
-        drawCard(myFriend(), 1);
-    }
-    for (var i=0; i<myMinion.length; i++)
-        myMinion[i].sleeping = false;
-    for (var i=0; i<enemyMinion.length; i++)
-        enemyMinion[i].sleeping = false;
-    $("#ACT")[0].disabled = !myRound();
-    $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
-    rebuildHero();
-    rebuildMinions();
+    delayedCall(function() {
+        while (roundEndQueue.length > 0)
+            roundEndQueue.shift()();
+        
+        for (var i=0; i<myHand.length; i++)
+            if (myHand[i].removeOnEOR) {
+                myHand.splice(i, 1);
+                i--;
+            }
+        for (var i=0; i<enemyHand.length; i++)
+            if (enemyHand[i].removeOnEOR) {
+                enemyHand.splice(i, 1);
+                i--;
+            }
+        if (myRound()) {
+            me.mana = Math.ceil(round / 2);
+            if (me.mana > 10) me.mana = 10;
+            drawCard(target, 1);
+        } else {
+            enemy.mana = Math.ceil(round / 2);
+            if (enemy.mana > 10) enemy.mana = 10;
+            drawCard(myFriend(), 1);
+        }
+        for (var i=0; i<myMinion.length; i++)
+            myMinion[i].sleeping = false;
+        for (var i=0; i<enemyMinion.length; i++)
+            enemyMinion[i].sleeping = false;
+        me.skillOn = true;
+        enemy.skillOn = true;
+        $("#ACT")[0].disabled = !myRound();
+        $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
+        rebuildHand();
+        rebuildHero();
+        rebuildMinions();
+    });
 }
 
 function messageHandler(msg) {
@@ -51,6 +74,13 @@ function messageHandler(msg) {
         doAlert("敌方使用了：\n" + reprCardDetailed(enemyHand[msg.index]));
         gameHistory = "敌方使用了" + enemyHand[msg.index].name + "\n" + gameHistory;
         playCard(myFriend(), msg.extras, msg.index);
+    }
+    else if (msg.type == "attack") {
+        if (msg.srch !== target && msg.srci !== -1) {
+            enemyMinion[msg.srci].sleeping = true;
+            rebuildMinions();
+        }
+        delayedCall(function() { simpleAttack(msg.srch, msg.srci, msg.dsth, msg.dsti); });
     }
     else if (msg.type == "use_skill") {
         doAlert("敌方使用了英雄技能");
@@ -86,7 +116,7 @@ function messageHandler(msg) {
         state = "changing card";
     } else if (msg.type == "exchange_card") {
         for (var i=0; i<msg.op.length; i++) {
-            enemyDeck.splice(msg.op[i][1], 0, enemyHand.splice(msg.op[i][0], 1));
+            enemyDeck.splice(msg.op[i][1], 0, enemyHand.splice(msg.op[i][0], 1)[0]);
         }
         for (var i=0; i<msg.op.length; i++) {
             enemyHand.push(enemyDeck.shift());
@@ -132,6 +162,7 @@ function playCard(hero, extras, index) {
         if (hand[index].battlecry > 0) {
             defered = true;
             activateEffect(hand[index].battlecry, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
+                if (isWrite) gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
                 minion.push(Minion(hand[index]));
                 rebuildMinions();
                 if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
@@ -147,6 +178,7 @@ function playCard(hero, extras, index) {
     } else if (hand[index].type === "S") {
         defered = true;
         activateEffect(hand[index].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
+            if (isWrite) gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
             if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
             hand.splice(index, 1);
             
@@ -156,6 +188,7 @@ function playCard(hero, extras, index) {
     }
     
     if (!defered) {
+        if (isWrite) gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
         if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
         hand.splice(index, 1);
         
@@ -164,16 +197,31 @@ function playCard(hero, extras, index) {
     }
 }
 
-function showDamage(hero, index, then) {
+function showDamage(hero, index, damage, then) {
+    $("#ACT")[0].disabled = true;
+    attackEventQueue.push(function() { $("#ACT")[0].disabled = false; });
     if (index === -1) {
-        var he = hero === target ? me : enemy;
+        var elmID = hero === target ? "#FHB" : "#EHB";
+        var elm = $(elmID)[0];
+        var old = elm.innerHTML;
+        elm.innerHTML = "<font color='#e99' size='18px'>-" + damage + "</font>";
+        setTimeout(function() {
+            elm.innerHTML = old;
+            then();
+        }, 1500);
     } else {
-        var pref = hero === target ? "F" : "E";
+        var elmID = "#M" + hero + index;
+        var elm = $(elmID)[0];
+        var old = elm.innerHTML;
+        elm.innerHTML = "<font color='#e99' size='18px'>-" + damage + "</font>";
+        setTimeout(function() {
+            elm.innerHTML = old;
+            then();
+        }, 1500);
     }
-    then();
 }
 
-function dealDamage(hero, index, damage) {
+function dealDamage(hero, index, damage, source) {
     if (index === -1) {
         var he = hero === target ? me : enemy;
         if (damage <= he.armor) {
@@ -187,17 +235,28 @@ function dealDamage(hero, index, damage) {
             if (he.health <= 0) {
                 if (me.health <= 0 && enemy.health > 0) doAlert("败  北");
                 if (enemy.health <= 0 && me.health > 0) doAlert("胜利");
-                if (enemy.health <= 0 && me.health <= 0) doAlert("打成平手");
             }
         }
     }
     else {
         var minion = hero === target ? myMinion : enemyMinion;
         minion[index].health -= damage;
+        var defered = false;
         if (minion[index].health <= 0) {
-            minion.splice(index, 1);
+            gameHistory = source + "消灭了" + minion[index].name + "\n" + gameHistory;
+            attackEventQueue.push([minion[index].timeStamp, function() {
+                if (minion[index].deathrattle > 0) {
+                    minion[index].highlight = true;
+                    rebuildMinions();
+                    var thiz = minion.splice(index, 1)[0];
+                    defered = true;
+                    activateEffect(thiz.deathrattle, {hero: hero}, [], true, function(a, b, c) {
+                        rebuildMinions();
+                    });
+                } else minion.splice(index, 1);
+            }]);
         }
-        rebuildMinions();
+        if (!defered) rebuildMinions();
     }
 }
 
@@ -205,7 +264,7 @@ function hitCard(index) {
     if (state == "changing card") {
         doConfirm("更换这张卡牌吗？\n" + reprCardDetailed(myHand[index]), function() {
             var targetPlace = randInt(5, myDeck.length - 1);
-            myDeck.splice(targetPlace, 0, myHand.splice(index, 1));
+            myDeck.splice(targetPlace, 0, myHand.splice(index, 1)[0]);
             exchangeCardPool.push([index, targetPlace]);
             rebuildHero();
             rebuildHand();
@@ -213,9 +272,10 @@ function hitCard(index) {
     } else if (myRound()) {
         if (myHand[index].cost > me.mana) {
             doAlert("费用不足！\n" + reprCardDetailed(myHand[index]));
+        } else if (myHand[index].type === "M" && myMinion.length >= 7) {
+            doAlert("随从位已满！\n" + reprCardDetailed(myHand[index]));
         } else {
             doConfirm("使用这张卡牌吗？\n" + reprCardDetailed(myHand[index]), function() {
-                gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
                 playCard(target, new Array(), index);
             });
         }
@@ -244,6 +304,93 @@ function act() {
     }
 }
 
+function getDamage(hero, index) {
+    if (index === -1) return 0;
+    var minion = hero === target ? myMinion : enemyMinion;
+    return minion[index].damage;
+}
+
+function getMinion(hero, index) {
+    var minion = hero === target ? myMinion : enemyMinion;
+    return minion[index];
+}
+
+function getHand(hero, index) {
+    var cards = hero === target ? myHand : enemyHand;
+    return cards[index];
+}
+
+function flushAttackQueue() {
+    attackEventQueue.sort(function(a, b) {
+        if (a.length === 2 && b.length !== 2) return -1;
+        if (b.length === 2 && a.length !== 2) return 1;
+        if (a.length === 2 && b.length === 2) {
+            if (a[0] > b[0]) return 1;
+            if (a[0] < b[0]) return -1;
+        }
+        return 0;
+    });
+    while (attackEventQueue.length > 0 && attackEventWaiter <= 0) {
+        var elm = attackEventQueue.shift();
+        if (elm.length === 2) elm[1]();
+        else elm();
+    }
+    if (attackEventWaiter <= 0) {
+        rebuildMinions();
+        rebuildHero();
+    }
+}
+
+function simpleAttack(srch, srci, dsth, dsti) {
+    var pack = function() {
+        if (getDamage(dsth, dsti) > 0)
+            attackEventWaiter += 1;
+        if (getDamage(srch, srci) > 0)
+            attackEventWaiter += 1;
+        if (getDamage(dsth, dsti) > 0) {
+            showDamage(srch, srci, getDamage(dsth, dsti), function() {
+                attackEventWaiter -= 1;
+                dealDamage(srch, srci, getDamage(dsth, dsti), reprTarget(dsth, dsti));
+                if (attackEventWaiter === 0) flushAttackQueue();
+            });
+        }
+        if (getDamage(srch, srci) > 0) {
+            showDamage(dsth, dsti, getDamage(srch, srci), function() {
+                attackEventWaiter -= 1;
+                dealDamage(dsth, dsti, getDamage(srch, srci), reprTarget(srch, srci));
+                if (attackEventWaiter === 0) flushAttackQueue();
+            });
+        }
+    };
+    pack();
+}
+
+function spellAttack(dmg, dsth, dsti, srcDisp) {
+    var pack = function() {
+        attackEventWaiter += 1;
+        showDamage(dsth, dsti, dmg, function() {
+            attackEventWaiter -= 1;
+            dealDamage(dsth, dsti, dmg, srcDisp || "");
+            if (attackEventWaiter === 0) flushAttackQueue();
+        });
+    };
+    pack();
+}
+
+function delayedCall(func) {
+    if (attackEventWaiter > 0) attackEventQueue.push(func);
+    else func();
+}
+
+function checkSelectionTargets() {
+    for (var i=-1; i<myMinion.length; i++)
+        if (targetSelector(target, i)) return true;
+    for (var i=-1; i<enemyMinion.length; i++)
+        if (targetSelector(myFriend(), i)) return true;
+    doAlert("没有适合的目标！");
+    return false;
+}
+
 function hitMinion(hero, index) {
     if (selectState == "targeting") {
         if (!targetSelector(hero, index)) {
@@ -254,14 +401,26 @@ function hitMinion(hero, index) {
         }
     } else if (myRound() && hero === target && !myMinion[index].sleeping) {
         selectState = "targeting";
-        targetSelector = function(hero, index) { return hero !== index; };
+        targetSelector = function(hero, index) {
+            if (hero === target)
+                return false;
+            var taunt = false;
+            for (var i=0; i<enemyMinion.length; i++)
+                if (enemyMinion[i].special & TAUNT) {
+                    taunt = true; break;
+                }
+            if (taunt && (index === -1 || (enemyMinion[index].special & TAUNT) === 0))
+                return false;
+            return true;
+        };
         targetingCallback = function(thero, tindex) {
-            dealDamage(thero, tindex, myMinion[index].damage);
             myMinion[index].sleeping = true;
             rebuildMinions();
+            delayedCall(function(){ simpleAttack(target, index, thero, tindex); });
+            sendMessage({"type": "attack", "srch": hero, "srci": index, "dsth": thero, "dsti": tindex});
         }
     } else {
-        doAlert(reprCardDetailed(myMinion[index]));
+        doAlert(reprCardDetailed(getMinion(hero, index)));
     }
 }
 

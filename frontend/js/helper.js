@@ -30,4 +30,4 @@ function getQueryParam(name) {
     }
 }
 
-BASE_ADDR = "http://127.0.0.1:59095"
+BASE_ADDR = "http://192.168.2.100:59095"

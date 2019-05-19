@@ -2,6 +2,11 @@ function reprHero(hero) {
     return target === hero ? "你" : "敌方";
 }
 
+function reprTarget(hero, index) {
+    if (index === -1) return target === hero ? "你" : "敌方英雄";
+    return reprHero(hero) + "的" + (target === hero ? myMinion : enemyMinion)[index].name;
+}
+
 function reprType(card) {
     return card.type == "S" ? "法术" : card.type == "M" ? "随从" : card.type == "W" ? "武器" : "未知";
 }
@@ -57,7 +62,7 @@ function rebuildMinions() {
     $("#FMS")[0].innerHTML = "";
     for (var i=0; i<myMinion.length; i++) {
         var card = myMinion[i].card;
-        var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
+        var proto = '<button type="button" style="min-width:13%; text-align: center; $(EXTRA)" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
         proto = proto.replace("$(NAME)", card.name || "未命名");
         proto = proto.replace("$(HP)", myMinion[i].health);
         proto = proto.replace("$(OWNER)", target);
@@ -65,19 +70,21 @@ function rebuildMinions() {
         proto = proto.replace("$(OWNER)", target);
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ATK)", myMinion[i].damage);
+        proto = proto.replace("$(EXTRA)", myMinion[i].highlight ? "background-color: #beb": "");
         proto = proto.replace("$(DESC)", ((myMinion[i].special & TAUNT) ? "嘲讽" : "") + (myMinion[i].sleeping ? "Zzzz": "随从"));
         $("#FMS")[0].innerHTML += proto;
     }
     $("#EMS")[0].innerHTML = "";
     for (var i=0; i<enemyMinion.length; i++) {
         var card = enemyMinion[i].card;
-        var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
+        var proto = '<button type="button" style="min-width:13%; text-align: center; $(EXTRA)" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
         proto = proto.replace("$(NAME)", card.name || "未命名");
         proto = proto.replace("$(HP)", enemyMinion[i].health);
         proto = proto.replace("$(OWNER)", myFriend());
         proto = proto.replace("$(OWNER)", myFriend());
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ID)", i);
+        proto = proto.replace("$(EXTRA)", enemyMinion[i].highlight ? "background-color: #beb": "");
         proto = proto.replace("$(ATK)", enemyMinion[i].damage);
         proto = proto.replace("$(DESC)", ((enemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (enemyMinion[i].sleeping ? "Zzzz": "随从"));
         $("#EMS")[0].innerHTML += proto;

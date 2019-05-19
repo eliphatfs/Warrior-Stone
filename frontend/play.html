@@ -6,23 +6,23 @@
 <body>
     <div id="wait">等待对手连线……</div>
     <div id="game" style="display: none">
-    <p style="text-align: center"><button type="button" style="width:70%; text-align: center" onclick="hitEnemyHero()">
+    <p style="text-align: center"><button type="button" style="width:70%; text-align: center" onclick="hitEnemyHero()" id="EHB">
         敌方英雄 - <span id="EJ">战士</span> 武器 <span id="EW">N/A</span>
         <br />血量 <span id="EH">30</span> 护甲 <span id="EA">0</span> 法力 <span id="EM">0</span>
         <br />手牌 <span id="ECH">3</span> 牌库 <span id="ECD">27</span>
     </button>
-    <button type="button" style="width:25%; text-align: center">
+    <button type="button" style="width:25%; text-align: center; float:right">
         技能[<span id="EHSC">2</span>]<br /><span id="EHSD">获得2护甲</span><br /><span id="EHS">可用</span>
     </button></p>
     <p style="text-align: center" id="EMS"></p>
     <hr />
     <p style="text-align: center" id="FMS"></p>
-    <p style="text-align: center"><button type="button" style="width:70%; text-align: center" onclick="hitMyHero()">
+    <p style="text-align: center"><button type="button" style="width:70%; text-align: center" onclick="hitMyHero()" id="FHB">
         你 - <span id="FJ">战士</span> 武器 <span id="FW">N/A</span>
         <br />血量 <span id="FH">30</span> 护甲 <span id="FA">0</span> 法力 <span id="FM">0</span>
         <br />手牌 <span id="FCH">3</span> 牌库 <span id="FCD">27</span>
     </button>
-    <button type="button" style="width:25%; text-align: center" onclick="skill()">
+    <button type="button" style="width:25%; text-align: center; float:right" onclick="skill()">
         技能[<span id="FHSC">2</span>]<br /><span id="FHSD">获得2护甲</span><br /><span id="FHS">可用</span>
     </button>
     </p>
