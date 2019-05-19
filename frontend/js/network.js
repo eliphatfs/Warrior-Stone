@@ -11,7 +11,7 @@ function acknowledgeMessage() {
             setTimeout(fetchMessage, 100);
         },
         error: function(xhr, err, opt) {
-            doAlert("您因为断线而输掉了比赛。");
+            setTimeout(acknowledgeMessage, 500);
         }
     });
 }
@@ -46,6 +46,9 @@ function sendMessage(content) {
         }),
         dataType: 'json',
         success: function(resp) {
+        },
+        error: function(xhr, err, opt) {
+            setTimeout(function() { sendMessage(content); }, 500);
         }
     });
 }
