@@ -174,12 +174,30 @@ function drawCard(hero, count) {
     rebuildHero();
 }
 
+function wakeSleep(eventData, extras, isWrite, then) {
+    for (var i=0; i<7; i++) {
+        var minion = getMinion(eventData.hero, i);
+        if (minion) {
+            if (minion.useevent === 5) {
+                if (minion.sleeping && minion.firstRound) {
+                    minion.sleeping = false;
+                    delayedCall(function() {
+                        rebuildMinions();
+                        then(eventData, extras, isWrite);
+                    });
+                }
+            }
+        }
+    }
+}
+
 var ALL_EFFECTS = {
     "15": moreManaEffect,
     "1": innerBreak,
     "2": killInperfect,
     "3": battleWay,
     "4": battleDrawCard,
+    "5": wakeSleep,
     "6": do1ToAllMinions,
     "10": letsDraw2Cards
 }

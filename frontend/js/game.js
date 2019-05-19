@@ -55,10 +55,14 @@ function roundStart() {
             if (enemy.mana > 10) enemy.mana = 10;
             drawCard(myFriend(), 1);
         }
-        for (var i=0; i<myMinion.length; i++)
+        for (var i=0; i<myMinion.length; i++) {
             myMinion[i].sleeping = false;
-        for (var i=0; i<enemyMinion.length; i++)
+            myMinion[i].firstRound = false;
+        }
+        for (var i=0; i<enemyMinion.length; i++) {
             enemyMinion[i].sleeping = false;
+            enemyMinion[i].firstRound = false;
+        }
         me.skillOn = true;
         enemy.skillOn = true;
         $("#ACT")[0].disabled = !myRound();
@@ -150,12 +154,21 @@ function playCard(hero, extras, index) {
     he.mana -= hand[index].cost;
     var isWrite = hero === target;
     
-    for (var i=0; i<minion.length; i++)
-        if (minion[i].useevent > 0)
-            activateEffect(minion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
-    for (var i=0; i<eminion.length; i++)
-        if (eminion[i].useevent > 0)
-            activateEffect(eminion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
+    if (target === 1) {
+        for (var i=0; i<minion.length; i++)
+            if (minion[i].useevent > 0)
+                activateEffect(minion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
+        for (var i=0; i<eminion.length; i++)
+            if (eminion[i].useevent > 0)
+                activateEffect(eminion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
+    } else {
+        for (var i=0; i<eminion.length; i++)
+            if (eminion[i].useevent > 0)
+                activateEffect(eminion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
+        for (var i=0; i<minion.length; i++)
+            if (minion[i].useevent > 0)
+                activateEffect(minion[i].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){});
+    }
     
     var defered = false;
     if (hand[index].type === "M") {
