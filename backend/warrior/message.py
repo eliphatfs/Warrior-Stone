@@ -30,7 +30,7 @@ async def post_message(request):
 async def fetch_message(request):
     try:
         body = await request.json()
-        while (rooms[(body["room"], body["target"])].empty()):
+        while len(rooms[(body["room"], body["target"])]) == 0:
             await asyncio.sleep(0.05)
         logging.info("GET: " + str(body["room"]) + str(body["target"]))
         msg = rooms[(body["room"], body["target"])].popleft()
