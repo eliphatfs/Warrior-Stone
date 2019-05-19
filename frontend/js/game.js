@@ -309,16 +309,19 @@ function dealDamage(hero, index, damage, source) {
                         }
                 }]);  // TODO: isWrite
                 gameHistory = source + "消灭了" + minion[index].name + "\n" + gameHistory;
+                var ts = minion[index].timeStamp;
                 attackEventQueue.push([minion[index].timeStamp + 100000, function() {
-                    if (minion[index].deathrattle > 0) {
-                        minion[index].highlight = true;
-                        rebuildMinions();
-                        var thiz = minion.splice(index, 1)[0];
-                        defered = true;
-                        activateEffect(thiz.deathrattle, {hero: hero}, [], true, function(a, b, c) {
-                            rebuildMinions();
-                        });
-                    } else minion.splice(index, 1);
+                    for (var i=0; i<7; i++)
+                        if (minion[i] && minion[i].timeStamp === ts)
+                            if (minion[i].deathrattle > 0) {
+                                minion[i].highlight = true;
+                                rebuildMinions();
+                                var thiz = minion.splice(i, 1)[0];
+                                defered = true;
+                                activateEffect(thiz.deathrattle, {hero: hero}, [], true, function(a, b, c) {
+                                    rebuildMinions();
+                                });
+                            } else minion.splice(i, 1);
                 }]);
             }
         } else {
