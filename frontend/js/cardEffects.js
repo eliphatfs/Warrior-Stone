@@ -51,5 +51,8 @@ var ALL_EFFECTS = {
 
 function activateEffect(effect, eventData, extras, isWrite, then) {
     if (effect === 0) return;
+    if (!ALL_EFFECTS[effect + ""]) {
+        return then(eventData, extras, isWrite);
+    }
     ALL_EFFECTS[effect + ""](eventData, extras, isWrite, then);
 }

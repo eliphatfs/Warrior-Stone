@@ -15,59 +15,10 @@ var exchangeCardPool = [];
 var round = 0;
 var targetSelector = function(hero, minionIndex) { return true; };
 var targetingCallback = function(hero, minionIndex) {};
+var gameHistory = "";
 
 function myFriend() {
     return target === 1 ? 2 : 1;
-}
-
-function reprType(card) {
-    return card.type == "S" ? "法术" : card.type == "M" ? "随从" : card.type == "W" ? "武器" : "未知";
-}
-
-function reprDesc(card) {
-    var ret = "";
-    if (card.type == "M")
-        ret += card.damage + "-" + card.health + " ";
-    else if (card.type == "W")
-        ret += card.damage + "-" + card.durability + " ";
-    ret += ((card.special & TAUNT) ? "嘲讽 " : "")
-    + (card.battlecry ? "战吼 ": "")
-    + (card.deathrattle ? "亡语 ": "");
-    return ret;
-}
-
-function reprCardDetailed(card) {
-    return card.name + " [" + card.cost + "]" + reprType(card) + "\n" + (card.type == "M" ? card.damage + "-" + card.health + " " : " ") + (card.type == "W" ? card.damage + "-" + card.durability + " " : " ") + (card.description || "无描述");
-}
-
-function rebuildHero() {
-    $("#EH")[0].innerHTML = enemy.health;
-    $("#EA")[0].innerHTML = enemy.armor;
-    $("#EM")[0].innerHTML = enemy.mana;
-    $("#ECH")[0].innerHTML = enemyHand.length;
-    $("#ECD")[0].innerHTML = enemyDeck.length;
-    $("#EHS")[0].innerHTML = enemy.skillOn ? "可用" : "已使用";
-    
-    $("#FH")[0].innerHTML = me.health;
-    $("#FA")[0].innerHTML = me.armor;
-    $("#FM")[0].innerHTML = me.mana;
-    $("#FCH")[0].innerHTML = myHand.length;
-    $("#FCD")[0].innerHTML = myDeck.length;
-    $("#FHS")[0].innerHTML = me.skillOn ? "可用" : "已使用";
-}
-
-function rebuildHand() {
-    $("#Hand")[0].innerHTML = "";
-    for (var i=0; i<myHand.length; i++) {
-        var proto = '<button type="button" style="min-width: 20%; text-align: center" id="H_$(ID)" onclick="hitCard($(ID))">[<span id="HC_$(ID)">$(COST)</span>] <span id="HN_$(ID)">$(NAME)</span><br /><span id="HD_$(ID)">$(DESC)</span></button>';
-        while (proto.indexOf("$(ID)") != -1)
-            proto = proto.replace("$(ID)", i);
-        var card = myHand[i];
-        proto = proto.replace("$(NAME)", card.name || "未命名");
-        proto = proto.replace("$(COST)", card.cost);
-        proto = proto.replace("$(DESC)", reprType(card) + "<br />" + reprDesc(card));
-        $("#Hand")[0].innerHTML += proto;
-    }
 }
 
 function myRound() {
@@ -98,10 +49,12 @@ function roundStart() {
 function messageHandler(msg) {
     if (msg.type == "play_card") {
         doAlert("敌方使用了：\n" + reprCardDetailed(enemyHand[msg.index]));
+        gameHistory = "敌方使用了" + enemyHand[msg.index].name + "\n" + gameHistory;
         playCard(myFriend(), msg.extras, msg.index);
     }
     else if (msg.type == "use_skill") {
         doAlert("敌方使用了英雄技能");
+        gameHistory = "敌方使用了英雄技能\n" + gameHistory;
         enemy.mana -= 2;
         enemy.armor += 2;
         enemy.skillOn = false;
@@ -155,87 +108,8 @@ function messageHandler(msg) {
     }
 }
 
-function rebuildMinions() {
-    $("#FMS")[0].innerHTML = "";
-    for (var i=0; i<myMinion.length; i++) {
-        var card = myMinion[i].card;
-        var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
-        proto = proto.replace("$(NAME)", card.name || "未命名");
-        proto = proto.replace("$(HP)", myMinion[i].health);
-        proto = proto.replace("$(OWNER)", target);
-        proto = proto.replace("$(ID)", i);
-        proto = proto.replace("$(OWNER)", target);
-        proto = proto.replace("$(ID)", i);
-        proto = proto.replace("$(ATK)", myMinion[i].damage);
-        proto = proto.replace("$(DESC)", ((myMinion[i].special & TAUNT) ? "嘲讽" : "") + (myMinion[i].sleeping ? "Zzzz": "随从"));
-        $("#FMS")[0].innerHTML += proto;
-    }
-    $("#EMS")[0].innerHTML = "";
-    for (var i=0; i<enemyMinion.length; i++) {
-        var card = enemyMinion[i].card;
-        var proto = '<button type="button" style="min-width:13%; text-align: center" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
-        proto = proto.replace("$(NAME)", card.name || "未命名");
-        proto = proto.replace("$(HP)", enemyMinion[i].health);
-        proto = proto.replace("$(OWNER)", myFriend());
-        proto = proto.replace("$(OWNER)", myFriend());
-        proto = proto.replace("$(ID)", i);
-        proto = proto.replace("$(ID)", i);
-        proto = proto.replace("$(ATK)", enemyMinion[i].damage);
-        proto = proto.replace("$(DESC)", ((enemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (enemyMinion[i].sleeping ? "Zzzz": "随从"));
-        $("#EMS")[0].innerHTML += proto;
-    }
-}
-
-function acknowledgeMessage() {
-    $.ajax({
-        url: BASE_ADDR + '/acknowledge_message',
-        type: 'post',
-        data: JSON.stringify({
-            "room": room,
-            "target": target
-        }),
-        dataType: 'json',
-        success: function(resp) {
-            setTimeout(fetchMessage, 30);
-        },
-        error: function(xhr, err, opt) {
-            doAlert("您因为断线而输掉了比赛。");
-        }
-    });
-}
-
-function fetchMessage() {
-    $.ajax({
-        url: BASE_ADDR + '/fetch_message_blocked',
-        type: 'post',
-        data: JSON.stringify({
-            "room": room,
-            "target": target
-        }),
-        dataType: 'json',
-        success: function(resp) {
-            acknowledgeMessage();
-            messageHandler(resp.data);
-        },
-        error: function(xhr, err, opt) {
-            setTimeout(fetchMessage, 100);
-        }
-    });
-}
-
-function sendMessage(content) {
-    $.ajax({
-        url: BASE_ADDR + '/post_message',
-        type: 'post',
-        data: JSON.stringify({
-            "room": room,
-            "target": myFriend(),
-            "message": content
-        }),
-        dataType: 'json',
-        success: function(resp) {
-        }
-    });
+function showHistory() {
+    doAlert(gameHistory);
 }
 
 function playCard(hero, extras, index) {
@@ -290,6 +164,43 @@ function playCard(hero, extras, index) {
     }
 }
 
+function showDamage(hero, index, then) {
+    if (index === -1) {
+        var he = hero === target ? me : enemy;
+    } else {
+        var pref = hero === target ? "F" : "E";
+    }
+    then();
+}
+
+function dealDamage(hero, index, damage) {
+    if (index === -1) {
+        var he = hero === target ? me : enemy;
+        if (damage <= he.armor) {
+            he.armor -= damage;
+            rebuildHero();
+        } else {
+            damage -= he.armor;
+            he.armor = 0;
+            he.health -= damage;
+            rebuildHero();
+            if (he.health <= 0) {
+                if (me.health <= 0 && enemy.health > 0) doAlert("败  北");
+                if (enemy.health <= 0 && me.health > 0) doAlert("胜利");
+                if (enemy.health <= 0 && me.health <= 0) doAlert("打成平手");
+            }
+        }
+    }
+    else {
+        var minion = hero === target ? myMinion : enemyMinion;
+        minion[index].health -= damage;
+        if (minion[index].health <= 0) {
+            minion.splice(index, 1);
+        }
+        rebuildMinions();
+    }
+}
+
 function hitCard(index) {
     if (state == "changing card") {
         doConfirm("更换这张卡牌吗？\n" + reprCardDetailed(myHand[index]), function() {
@@ -304,6 +215,7 @@ function hitCard(index) {
             doAlert("费用不足！\n" + reprCardDetailed(myHand[index]));
         } else {
             doConfirm("使用这张卡牌吗？\n" + reprCardDetailed(myHand[index]), function() {
+                gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
                 playCard(target, new Array(), index);
             });
         }
@@ -332,33 +244,6 @@ function act() {
     }
 }
 
-function dealDamage(hero, index, damage) {
-    if (index === -1) {
-        var he = hero === target ? me : enemy;
-        if (damage <= he.armor) {
-            he.armor -= damage;
-        } else {
-            damage -= he.armor;
-            he.armor = 0;
-            he.health -= damage;
-            rebuildHero();
-            if (he.health <= 0) {
-                if (me.health <= 0 && enemy.health > 0) doAlert("败  北");
-                if (enemy.health <= 0 && me.health > 0) doAlert("胜利");
-                if (enemy.health <= 0 && me.health <= 0) doAlert("打成平手");
-            }
-        }
-    }
-    else {
-        var minion = hero === target ? myMinion : enemyMinion;
-        minion[index].health -= damage;
-        if (minion[index].health <= 0) {
-            minion.splice(index, 1);
-        }
-        rebuildMinions();
-    }
-}
-
 function hitMinion(hero, index) {
     if (selectState == "targeting") {
         if (!targetSelector(hero, index)) {
@@ -370,9 +255,10 @@ function hitMinion(hero, index) {
     } else if (myRound() && hero === target && !myMinion[index].sleeping) {
         selectState = "targeting";
         targetSelector = function(hero, index) { return hero !== index; };
-        targetingCallback = function(hero, index) {
-            dealDamage(hero, index, myMinion[index].damage);
+        targetingCallback = function(thero, tindex) {
+            dealDamage(thero, tindex, myMinion[index].damage);
             myMinion[index].sleeping = true;
+            rebuildMinions();
         }
     } else {
         doAlert(reprCardDetailed(myMinion[index]));

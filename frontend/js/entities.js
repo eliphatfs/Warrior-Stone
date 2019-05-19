@@ -5,6 +5,7 @@ function Minion(card) {
     minion.card = card;
     minion.timeStamp = timeStamp;
     minion.sleeping = true;
+    minion.maxHealth = minion.health;
     timeStamp++;
     return minion;
 }
