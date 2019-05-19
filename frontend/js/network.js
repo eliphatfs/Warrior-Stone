@@ -48,7 +48,7 @@ function sendMessage(content) {
         success: function(resp) {
         },
         error: function(xhr, err, opt) {
-            setTimeout(function() { sendMessage(content); }, 500);
+            sendMessage({type: "sync", "values": [myMinion, enemyMinion, me, enemy, myHand, enemyHand, myDeck, enemyDeck, round]});
         }
     });
 }

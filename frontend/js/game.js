@@ -149,6 +149,21 @@ function messageHandler(msg) {
     } else if (msg.type == "end_round") {
         round++;
         roundStart();
+    } else if (msg.type == "sync") {
+        myMinion = msg.values[1];
+        enemyMinion = msg.values[0];
+        me = msg.values[3];
+        enemy = msg.values[2];
+        myHand = msg.values[5];
+        enemyHand = msg.values[4];
+        myDeck = msg.values[7];
+        enemyDeck = msg.values[6];
+        round = msg.values[8];
+        $("#ACT")[0].disabled = !myRound();
+        $("#ACT")[0].innerHTML = myRound() ? "结束回合": "对手回合";
+        rebuildHand();
+        rebuildHero();
+        rebuildMinions();
     }
 }
 
