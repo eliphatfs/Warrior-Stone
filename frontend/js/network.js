@@ -52,3 +52,7 @@ function sendMessage(content) {
         }
     });
 }
+
+function forceSync() {
+    sendMessage({type: "sync", "values": [myMinion, enemyMinion, me, enemy, myHand, enemyHand, myDeck, enemyDeck, round]});
+}
