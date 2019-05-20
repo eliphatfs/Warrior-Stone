@@ -205,7 +205,7 @@ function messyFight(eventData, extras, isWrite, then) {
     } else {
         if (isWrite) {
             var gid = randInt(0, totalCount);
-            var keepH = gid >= myMinion.length ? target : myFriend();
+            var keepH = gid < myMinion.length ? target : myFriend();
             var keepI = gid >= myMinion.length ? gid - myMinion.length : gid;
             extras.push(keepH);
             extras.push(keepI);
