@@ -77,7 +77,7 @@ var ALL_CARDS = [
     endescriptify("战路", "对所有随从造成一点伤害，回响")(CardSpell(2, 3)),
     endescriptify("战斗怒火", "每有一个受伤的友方角色，抽一张牌")(CardSpell(2, 4)),
     endescriptify("暴乱", "每有一个随从受到伤害，+1攻击")(CardMinion(3, 2, 4, 0, 0, 0, 7, 0, 0)),
-    endescriptify("战歌", "每当你召唤一个攻击力≤3的随从，获得冲锋")(CardMinion(3, 2, 3, 0, 0, 0, 0, 0, 5)),
+    endescriptify("战歌", "第一回合内你每打出一张卡牌，可以再攻击一次")(CardMinion(3, 2, 3, 0, 0, 0, 0, 0, 5)),
     endescriptify("苦痛", "受到伤害时抽一张牌")(CardMinion(3, 1, 3, 0, 0, 0, 9, 0, 0)),
     endescriptify("暴虐食尸鬼", "战吼：对所有随从造成一点伤害")(CardMinion(3, 3, 3, 0, 6, 0, 0, 0, 0)),
     endescriptify("爆牌鱼", "战吼：双方抽两张牌")(CardMinion(3, 2, 2, 0, 10, 0, 0, 0, 0)),
@@ -89,5 +89,8 @@ var ALL_CARDS = [
     endescriptify("幸运币", "获得一个额外的法力水晶")(CardSpell(0, 15)),
     endescriptify("蜘蛛坦克", "机械")(CardMinion(3, 3, 4, 0, 0, 0, 0, 0, 0)),
     endescriptify("冰风雪人", "")(CardMinion(4, 4, 5, 0, 0, 0, 0, 0, 0)),
-    endescriptify("淡水鳄", "野兽")(CardMinion(2, 2, 3, 0, 0, 0, 0, 0, 0))
+    endescriptify("淡水鳄", "野兽")(CardMinion(2, 2, 3, 0, 0, 0, 0, 0, 0)),
+    endescriptify("盾牌猛击", "对一个随从造成等同于护甲值的伤害")(CardSpell(1, 16)),
+    endescriptify("盾牌侍女", "战吼：护甲+5")(CardMinion(6, 5, 5, 0, 17, 0, 0, 0, 0)),
+    endescriptify("铜墙铁壁", "护甲+5")(CardSpell(1, 17))
 ];

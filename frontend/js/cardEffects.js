@@ -278,6 +278,57 @@ function costAdd5(eventData, extras, isWrite, then) {
     delayedCall(function() { rebuildHand(); then(eventData, extras, isWrite); });
 }
 
+// 盾猛
+function armorHit(eventData, extras, isWrite, then) {
+    var he = eventData.hero === target ? me : enemy;
+    if (isWrite) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            return index !== -1;
+        };
+        if (!checkSelectionTargets()) {
+            selectState = "failed";
+            return;
+        }
+        targetingCallback = function(thero, tindex) {
+            extras.push(thero);
+            extras.push(tindex);
+            extras.push(he.armor);
+            var damager = he.armor;
+            delayedCall(function(){
+                spellAttack(damager, thero, tindex, "你使用盾牌猛击");
+            });
+            delayedCall(function(){
+                then(eventData, extras, isWrite);
+            });
+        }
+    } else {
+        var h = extras.shift();
+        var ind = extras.shift();
+        var dmg = extras.shift();
+        delayedCall(function(){
+            spellAttack(dmg, h, ind, "敌方使用盾牌猛击");
+        });
+        delayedCall(function() {
+            then(eventData, extras, isWrite);
+        });
+    }
+}
+
+// 叠甲
+function gainArmor(count) {
+    return function(eventData, extras, isWrite, then) {
+        var he = eventData.hero === target ? me : enemy;
+        he.armor += count;
+        delayedCall(function() {
+            rebuildHero();
+            then(eventData, extras, isWrite);
+        });
+    }
+}
+
+
+
 var ALL_EFFECTS = {
     "15": moreManaEffect,
     "1": innerBreak,
@@ -293,7 +344,9 @@ var ALL_EFFECTS = {
     "11": lord,
     "12": messyFight,
     "13": costAdd5,
-    "14": costSub1
+    "14": costSub1,
+    "16": armorHit,
+    "17": gainArmor(5)
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {
