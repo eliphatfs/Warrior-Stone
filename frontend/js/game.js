@@ -163,6 +163,8 @@ function messageHandler(msg) {
         rebuildHand();
         rebuildHero();
         rebuildMinions();
+    } else if (msg.type == "surrender") {
+        spellAttack(enemy.health + enemy.armor, myFriend(), -1, "敌方英雄");
     }
 }
 
@@ -358,6 +360,13 @@ function dealDamage(hero, index, damage, source) {
             }]);
         }
     }
+}
+
+function surrender() {
+    doConfirm("确定投降吗？", function() {
+        spellAttack(me.health + me.armor, target, -1, "你");
+        sendMessage({"type": "surrender"});
+    });
 }
 
 function hitCard(index) {
