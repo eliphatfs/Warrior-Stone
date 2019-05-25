@@ -92,7 +92,6 @@ function messageHandler(msg) {
     else if (msg.type == "attack") {
         if (msg.srch !== target && msg.srci !== -1) {
             enemyMinion[msg.srci].sleeping = true;
-            rebuildMinions();
         }
         delayedCall(function() { simpleAttack(msg.srch, msg.srci, msg.dsth, msg.dsti); });
     }
@@ -168,6 +167,11 @@ function messageHandler(msg) {
 }
 
 function showHistory() {
+    var splt = gameHistory.split("\n");
+    if (splt.length > 12) {
+        splt.splice(12, 10000);
+        gameHistory = splt.join("\n");
+    }
     doAlert(gameHistory);
 }
 
@@ -235,31 +239,52 @@ function playCard(hero, extras, index) {
     }
 }
 
-function showDamage(hero, index, damage, then) {
-    $("#ACT")[0].disabled = true;
-    attackEventQueue.push(function() { $("#ACT")[0].disabled = false; });
-    if (index === -1) {
-        var elmID = hero === target ? "#FHB" : "#EHB";
-        var elm = $(elmID)[0];
-        var old = elm.innerHTML;
-        elm.innerHTML = "<font color='#e99' size='18px'>-" + damage + "</font>";
-        setTimeout(function() {
-            elm.innerHTML = old;
-            then();
-        }, 1500);
-    } else {
-        var elmID = "#M" + hero + index;
-        var elm = $(elmID)[0];
-        var old = elm.innerHTML;
-        elm.innerHTML = "<font color='#e99' size='18px'>-" + damage + "</font>";
-        setTimeout(function() {
-            elm.innerHTML = old;
-            then();
-        }, 1500);
-    }
+function getMinionByTimeStamp(ts) {
+    var minion;
+    minion = myMinion;
+    for (var i=0; i<7; i++)
+        if (minion[i] && minion[i].timeStamp === ts)
+            return minion[i];
+    minion = enemyMinion;
+    for (var i=0; i<7; i++)
+        if (minion[i] && minion[i].timeStamp === ts)
+            return minion[i];
+    return null;
+}
+
+function getMinionByTimeStampRegioned(ts, mine, his) {
+    var minion;
+    minion = mine;
+    for (var i=0; i<7; i++)
+        if (minion[i] && minion[i].timeStamp === ts)
+            return minion[i];
+    minion = his;
+    for (var i=0; i<7; i++)
+        if (minion[i] && minion[i].timeStamp === ts)
+            return minion[i];
+    return null;
+}
+
+function getMinionPosByTimeStampRegioned(ts, mine, his) {
+    if (ts === -1)
+        return [-1, -1];
+    var minion;
+    minion = mine;
+    for (var i=0; i<7; i++)
+        if (minion[i] && minion[i].timeStamp === ts)
+            return [target, i];
+    minion = his;
+    for (var i=0; i<7; i++)
+        if (minion[i] && minion[i].timeStamp === ts)
+            return [myFriend(), i];
+    return null;
 }
 
 function dealDamage(hero, index, damage, source) {
+    if (index !== -1)
+        queueShowDamage(hero, getMinion(hero, index).timeStamp, damage);
+    else
+        queueShowDamage(hero, -1, damage);
     if (index === -1) {
         var he = hero === target ? me : enemy;
         if (damage <= he.armor) {
@@ -290,7 +315,6 @@ function dealDamage(hero, index, damage, source) {
                             if (getMinion(h, i) && getMinion(h, i).hurtevent > 0) {
                                 defered = true;
                                 activateEffect(getMinion(h, i).hurtevent, {owner: h, myIndex: i, dsti: index, dsth: hero, killing: false}, [], true, function(a, b, c) {
-                                    rebuildMinions();
                                 });
                             }
                         }
@@ -303,7 +327,6 @@ function dealDamage(hero, index, damage, source) {
                             if (getMinion(h, i) && getMinion(h, i).hurtevent > 0) {
                                 defered = true;
                                 activateEffect(getMinion(h, i).hurtevent, {owner: h, myIndex: i, dsti: index, dsth: hero, killing: true}, [], true, function(a, b, c) {
-                                    rebuildMinions();
                                 });
                             }
                         }
@@ -315,11 +338,9 @@ function dealDamage(hero, index, damage, source) {
                         if (minion[i] && minion[i].timeStamp === ts)
                             if (minion[i].deathrattle > 0) {
                                 minion[i].highlight = true;
-                                rebuildMinions();
                                 var thiz = minion.splice(i, 1)[0];
                                 defered = true;
                                 activateEffect(thiz.deathrattle, {hero: hero}, [], true, function(a, b, c) {
-                                    rebuildMinions();
                                 });
                             } else minion.splice(i, 1);
                 }]);
@@ -331,13 +352,11 @@ function dealDamage(hero, index, damage, source) {
                         if (getMinion(h, i) && getMinion(h, i).hurtevent) {
                             defered = true;
                             activateEffect(getMinion(h, i).hurtevent, {owner: h, myIndex: i, dsti: index, dsth: hero, killing: false}, [], true, function(a, b, c) {
-                                rebuildMinions();
                             });
                         }
                     }
             }]);
         }
-        if (!defered) rebuildMinions();
     }
 }
 
@@ -402,6 +421,7 @@ function getHand(hero, index) {
 }
 
 function flushAttackQueue() {
+    flushShowDamageQueue();
     attackEventQueue.sort(function(a, b) {
         if (a.length === 2 && b.length !== 2) return -1;
         if (b.length === 2 && a.length !== 2) return 1;
@@ -416,44 +436,32 @@ function flushAttackQueue() {
         if (elm.length === 2) elm[1]();
         else elm();
     }
-    if (attackEventWaiter <= 0) {
-        rebuildMinions();
-        rebuildHero();
-    }
 }
 
 function simpleAttack(srch, srci, dsth, dsti) {
     var pack = function() {
-        if (getDamage(dsth, dsti) > 0)
-            attackEventWaiter += 1;
-        if (getDamage(srch, srci) > 0)
-            attackEventWaiter += 1;
         if (getDamage(dsth, dsti) > 0) {
-            showDamage(srch, srci, getDamage(dsth, dsti), function() {
-                attackEventWaiter -= 1;
-                dealDamage(srch, srci, getDamage(dsth, dsti), reprTarget(dsth, dsti));
-                if (attackEventWaiter === 0) flushAttackQueue();
-            });
+            dealDamage(srch, srci, getDamage(dsth, dsti), reprTarget(dsth, dsti));
         }
         if (getDamage(srch, srci) > 0) {
-            showDamage(dsth, dsti, getDamage(srch, srci), function() {
-                attackEventWaiter -= 1;
-                dealDamage(dsth, dsti, getDamage(srch, srci), reprTarget(srch, srci));
-                if (attackEventWaiter === 0) flushAttackQueue();
-            });
+            dealDamage(dsth, dsti, getDamage(srch, srci), reprTarget(srch, srci));
         }
+        flushAttackQueue();
     };
     pack();
 }
 
 function spellAttack(dmg, dsth, dsti, srcDisp) {
     var pack = function() {
-        attackEventWaiter += 1;
-        showDamage(dsth, dsti, dmg, function() {
-            attackEventWaiter -= 1;
-            dealDamage(dsth, dsti, dmg, srcDisp || "");
-            if (attackEventWaiter === 0) flushAttackQueue();
-        });
+        dealDamage(dsth, dsti, dmg, srcDisp || "");
+        flushAttackQueue();
+    };
+    pack();
+}
+
+function spellAttackNoFlushQueue(dmg, dsth, dsti, srcDisp) {
+    var pack = function() {
+        dealDamage(dsth, dsti, dmg, srcDisp || "");
     };
     pack();
 }
@@ -496,7 +504,6 @@ function hitMinion(hero, index) {
         };
         targetingCallback = function(thero, tindex) {
             myMinion[index].sleeping = true;
-            rebuildMinions();
             delayedCall(function(){ simpleAttack(target, index, thero, tindex); });
             sendMessage({"type": "attack", "srch": hero, "srci": index, "dsth": thero, "dsti": tindex});
         }

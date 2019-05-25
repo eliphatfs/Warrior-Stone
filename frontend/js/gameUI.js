@@ -1,3 +1,10 @@
+var uiQueue = [];
+var uiMyMinion = [];
+var uiEnemyMinion = [];
+var uiDamageQueue = [];
+var spliceIndex = 10000;
+var UI_REFRESH_DELAY = 100;
+
 function reprHero(hero) {
     return target === hero ? "你" : "敌方";
 }
@@ -28,8 +35,73 @@ function reprCardDetailed(card) {
     return card.name + " [" + card.cost + "]" + reprType(card) + "\n" + (card.type == "M" ? card.damage + "-" + card.health + " " : " ") + (card.type == "W" ? card.damage + "-" + card.durability + " " : " ") + (card.description || "无描述");
 }
 
+function queueShowDamage(hero, timeStamp, damage) {
+    console.log(timeStamp);
+    if (spliceIndex > uiQueue.length) spliceIndex = uiQueue.length;
+    uiDamageQueue.push(hero);
+    uiDamageQueue.push(timeStamp);
+    uiDamageQueue.push(damage);
+}
+
+function flushShowDamageQueue() {
+    var pack = function() {
+        var elms = [], olds = [];
+        var heroes = [], indexes = [], damages = [];
+        for (var i=0; i<uiDamageQueue.length; i+=3) {
+            heroes.push(uiDamageQueue[i]);
+            indexes.push(uiDamageQueue[i + 1]);
+            damages.push(uiDamageQueue[i + 2]);
+        }
+        uiQueue.splice(spliceIndex, 0, [1500, function() {
+            $("#ACT")[0].disabled = false;
+            for(var i=0; i<elms.length; i++)
+                elms[i].innerHTML = olds[i];
+        }]);
+        uiQueue.splice(spliceIndex, 0, [0, function() {
+            for(var i=0; i<heroes.length; i++) {
+                var elmID;
+                if (indexes[i] === -1) {
+                    elmID = heroes[i] === target ? "#FHB" : "#EHB";
+                } else {
+                    console.log(uiEnemyMinion);
+                    console.log(enemyMinion);
+                    var pos = getMinionPosByTimeStampRegioned(indexes[i], uiMyMinion, uiEnemyMinion);
+                    elmID = "#M" + pos[0] + pos[1];
+                }
+                var elm = $(elmID)[0];
+                var old = elm.innerHTML;
+                elms.push(elm);
+                olds.push(old);
+                showDamageInternal(heroes[i], getMinionPosByTimeStampRegioned(indexes[i], uiMyMinion, uiEnemyMinion)[1], damages[i]);
+            }
+            rebuildHero();
+            rebuildMinions();
+        }]);
+        uiDamageQueue = [];
+    };
+    pack();
+}
+
+function showDamageInternal(hero, index, damage) {
+    $("#ACT")[0].disabled = true;
+    if (index === -1) {
+        var elmID = hero === target ? "#FHB" : "#EHB";
+        var elm = $(elmID)[0];
+        var old = elm.innerHTML;
+        elm.innerHTML = "<font color='#e99' size='18px'>-" + damage + "</font>";
+    } else {
+        var elmID = "#M" + hero + index;
+        var elm = $(elmID)[0];
+        var old = elm.innerHTML;
+        elm.innerHTML = "<font color='#e99' size='18px'>-" + damage + "</font>";
+    }
+}
 
 function rebuildHero() {
+    uiQueue.push([0, rebuildHeroInternal]);
+}
+
+function rebuildHeroInternal() {
     $("#EH")[0].innerHTML = enemy.health;
     $("#EA")[0].innerHTML = enemy.armor;
     $("#EM")[0].innerHTML = enemy.mana;
@@ -46,6 +118,10 @@ function rebuildHero() {
 }
 
 function rebuildHand() {
+    uiQueue.push([0, rebuildHandInternal]);
+}
+
+function rebuildHandInternal() {
     $("#Hand")[0].innerHTML = "";
     for (var i=0; i<myHand.length; i++) {
         var proto = '<button type="button" style="min-width: 20%; text-align: center" id="H_$(ID)" onclick="hitCard($(ID))">[<span id="HC_$(ID)">$(COST)</span>] <span id="HN_$(ID)">$(NAME)</span><br /><span id="HD_$(ID)">$(DESC)</span></button>';
@@ -59,35 +135,63 @@ function rebuildHand() {
     }
 }
 
+function printCallStack() {
+    var i = 0;
+    var fun = arguments.callee;
+    do {
+        fun = fun.arguments.callee.caller;
+        console.log(++i + ': ' + fun);
+    } while (fun);
+}
+
 function rebuildMinions() {
+    printCallStack();
+    uiMyMinion = myMinion;
+    uiEnemyMinion = enemyMinion;
+    uiQueue.push([200, function() {
+        rebuildMinionsInternal();
+    }]);
+}
+
+function rebuildMinionsInternal() {
     $("#FMS")[0].innerHTML = "";
-    for (var i=0; i<myMinion.length; i++) {
-        var card = myMinion[i].card;
+    for (var i=0; i<uiMyMinion.length; i++) {
+        var card = uiMyMinion[i].card;
         var proto = '<button type="button" style="min-width:13%; text-align: center; $(EXTRA)" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
         proto = proto.replace("$(NAME)", card.name || "未命名");
-        proto = proto.replace("$(HP)", myMinion[i].health);
+        proto = proto.replace("$(HP)", uiMyMinion[i].health);
         proto = proto.replace("$(OWNER)", target);
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(OWNER)", target);
         proto = proto.replace("$(ID)", i);
-        proto = proto.replace("$(ATK)", myMinion[i].damage);
-        proto = proto.replace("$(EXTRA)", myMinion[i].highlight ? "background-color: #beb": "");
-        proto = proto.replace("$(DESC)", ((myMinion[i].special & CHARGE) ? "冲锋" : "") + ((myMinion[i].special & TAUNT) ? "嘲讽" : "") + (myMinion[i].sleeping ? "Zzzz": "随从"));
+        proto = proto.replace("$(ATK)", uiMyMinion[i].damage);
+        proto = proto.replace("$(EXTRA)", uiMyMinion[i].highlight ? "background-color: #beb": "");
+        proto = proto.replace("$(DESC)", ((uiMyMinion[i].special & CHARGE) ? "冲锋" : "") + ((uiMyMinion[i].special & TAUNT) ? "嘲讽" : "") + (uiMyMinion[i].sleeping ? "Zzzz": "随从"));
         $("#FMS")[0].innerHTML += proto;
     }
     $("#EMS")[0].innerHTML = "";
-    for (var i=0; i<enemyMinion.length; i++) {
-        var card = enemyMinion[i].card;
+    for (var i=0; i<uiEnemyMinion.length; i++) {
+        var card = uiEnemyMinion[i].card;
         var proto = '<button type="button" style="min-width:13%; text-align: center; $(EXTRA)" id="M$(OWNER)$(ID)" onclick="hitMinion($(OWNER), $(ID))">$(NAME)<br />攻 $(ATK)<br />血 $(HP)<br />$(DESC)</button>';
         proto = proto.replace("$(NAME)", card.name || "未命名");
-        proto = proto.replace("$(HP)", enemyMinion[i].health);
+        proto = proto.replace("$(HP)", uiEnemyMinion[i].health);
         proto = proto.replace("$(OWNER)", myFriend());
         proto = proto.replace("$(OWNER)", myFriend());
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ID)", i);
-        proto = proto.replace("$(EXTRA)", enemyMinion[i].highlight ? "background-color: #beb": "");
-        proto = proto.replace("$(ATK)", enemyMinion[i].damage);
-        proto = proto.replace("$(DESC)", ((enemyMinion[i].special & CHARGE) ? "冲锋" : "") + ((enemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (enemyMinion[i].sleeping ? "Zzzz": "随从"));
+        proto = proto.replace("$(EXTRA)", uiEnemyMinion[i].highlight ? "background-color: #beb": "");
+        proto = proto.replace("$(ATK)", uiEnemyMinion[i].damage);
+        proto = proto.replace("$(DESC)", ((uiEnemyMinion[i].special & CHARGE) ? "冲锋" : "") + ((uiEnemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (uiEnemyMinion[i].sleeping ? "Zzzz": "随从"));
         $("#EMS")[0].innerHTML += proto;
     }
 }
+
+setInterval(function() {
+    if (uiQueue.length > 0) {
+        if (uiQueue[0][0] > 0) {
+            uiQueue[0][0] -= UI_REFRESH_DELAY;
+        } else {
+            uiQueue.shift()[1]();
+        }
+    }
+}, UI_REFRESH_DELAY);

@@ -90,7 +90,8 @@ function do1ToAllMinions(eventData, extras, isWrite, then) {
         for (var h=1; h<=2; h++)
             for (var i=0; i<7; i++)
                 if (getMinion(h, i))
-                    spellAttack(1, h, i, reprHero(eventData.hero) + "使用" + getHand(eventData.hero, eventData.index));
+                    spellAttackNoFlushQueue(1, h, i, reprHero(eventData.hero) + "使用" + getHand(eventData.hero, eventData.index));
+        flushAttackQueue();
     });
     delayedCall(function(){
         then(eventData, extras, isWrite);
@@ -202,9 +203,10 @@ function messyFight(eventData, extras, isWrite, then) {
                 for (var i=0; i<7; i++) {
                     if (keepI == i && keepH == h) continue;
                     if (!getMinion(h, i)) continue;
-                    spellAttack(getMinion(h, i).health, h, i, "你使用绝命乱斗");
+                    spellAttackNoFlushQueue(getMinion(h, i).health, h, i, "你使用绝命乱斗");
                 }
             }
+            flushAttackQueue();
             then(eventData, extras, isWrite);
         } else {
             var keepH = extras.shift();
@@ -213,9 +215,10 @@ function messyFight(eventData, extras, isWrite, then) {
                 for (var i=0; i<7; i++) {
                     if (keepI == i && keepH == h) continue;
                     if (!getMinion(h, i)) continue;
-                    spellAttack(getMinion(h, i).health, h, i, "敌方英雄使用绝命乱斗");
+                    spellAttackNoFlushQueue(getMinion(h, i).health, h, i, "敌方英雄使用绝命乱斗");
                 }
             }
+            flushAttackQueue();
             then(eventData, extras, isWrite);
         }
     }
