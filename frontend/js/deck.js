@@ -1,11 +1,12 @@
 var TAUNT = 1;
 var DRAGON = 2;
+var CHARGE = 4;
 
 var WARRIOR = 1;
 
 function Card(cost) { return {cost: cost, job: 0}; }
 
-function CardMinion(cost, damage, health, special, battlecry, deathrattle, hurtevent, roundend, useevent) {
+function CardMinion(cost, damage, health, special, battlecry, deathrattle, hurtevent, roundend, useevent, optionalFeature) {
     var proto = Card(cost);
     proto.type = "M";
     proto.damage = damage;
@@ -16,6 +17,7 @@ function CardMinion(cost, damage, health, special, battlecry, deathrattle, hurte
     proto.roundend = roundend;
     proto.useevent = useevent;
     proto.special = special;
+    proto.feature = optionalFeature;
     return proto;
 }
 
@@ -68,6 +70,8 @@ function endescriptify(name, description) {
 // 14: 你的所有手牌法力消耗-1
 // 15: 获得一个额外的法力水晶
 
+// OF1: 战歌
+
 var ALL_CARDS = [
     endescriptify("怒火中烧", "对一个随从造成一点伤害，使其增加2点攻击力")(CardSpell(0, 1)),
     endescriptify("斩杀", "消灭一个受伤的随从")(CardSpell(1, 2)),
@@ -77,11 +81,11 @@ var ALL_CARDS = [
     endescriptify("战路", "对所有随从造成一点伤害，回响")(CardSpell(2, 3)),
     endescriptify("战斗怒火", "每有一个受伤的友方角色，抽一张牌")(CardSpell(2, 4)),
     endescriptify("暴乱", "每有一个随从受到伤害，+1攻击")(CardMinion(3, 2, 4, 0, 0, 0, 7, 0, 0)),
-    endescriptify("战歌", "第一回合内你每打出一张卡牌，可以再攻击一次")(CardMinion(3, 2, 3, 0, 0, 0, 0, 0, 5)),
+    endescriptify("战歌", "当你召唤一个攻击力≤3的随从，使其获得冲锋")(CardMinion(3, 2, 3, 0, 0, 0, 0, 0, 5, 1)),
     endescriptify("苦痛", "受到伤害时抽一张牌")(CardMinion(3, 1, 3, 0, 0, 0, 9, 0, 0)),
     endescriptify("暴虐食尸鬼", "战吼：对所有随从造成一点伤害")(CardMinion(3, 3, 3, 0, 6, 0, 0, 0, 0)),
     endescriptify("爆牌鱼", "战吼：双方抽两张牌")(CardMinion(3, 2, 2, 0, 10, 0, 0, 0, 0)),
-    endescriptify("死咬", "亡语：对所有随从造成一点伤害")(CardMinion(4, 4, 2, 0, 0, 6, 0, 0, 0)),
+    endescriptify("死咬", "冲锋，亡语：对所有随从造成一点伤害")(CardMinion(4, 4, 2, CHARGE, 0, 6, 0, 0, 0)),
     endescriptify("奴隶主", "每当受到不致命的伤害时召唤一个奴隶主")(CardMinion(5, 3, 3, 0, 0, 0, 11, 0, 0)),
     endescriptify("绝命乱斗", "随机选择一个随从，消灭其他所有随从")(CardSpell(5, 12)),
     endescriptify("洛欧塞布", "战吼：下回合你的对手法术法力消耗+5")(CardMinion(5, 5, 5, 0, 13, 0, 0, 0, 0)),

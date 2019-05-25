@@ -201,7 +201,7 @@ function playCard(hero, extras, index) {
             defered = true;
             activateEffect(hand[index].battlecry, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
                 if (isWrite) gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
-                minion.push(Minion(hand[index]));
+                minion.push(Minion(hand[index], hero));
                 rebuildMinions();
                 if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
                 hand.splice(index, 1);
@@ -210,7 +210,7 @@ function playCard(hero, extras, index) {
                 rebuildHero();
             });
         } else {
-            minion.push(Minion(hand[index]));
+            minion.push(Minion(hand[index], hero));
             rebuildMinions();
         }
     } else if (hand[index].type === "S") {

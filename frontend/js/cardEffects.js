@@ -175,20 +175,9 @@ function drawCard(hero, count) {
 }
 
 function wakeSleep(eventData, extras, isWrite, then) {
-    for (var i=0; i<7; i++) {
-        var minion = getMinion(eventData.hero, i);
-        if (minion) {
-            if (minion.useevent === 5) {
-                if (minion.sleeping && minion.firstRound) {
-                    minion.sleeping = false;
-                    delayedCall(function() {
-                        rebuildMinions();
-                        then(eventData, extras, isWrite);
-                    });
-                }
-            }
-        }
-    }
+    delayedCall(function() {
+        then(eventData, extras, isWrite);
+    });
 }
 
 function battleBurn(eventData, extras, isWrite, then) {
@@ -253,9 +242,9 @@ function lord(eventData, extras, isWrite, then) {
         if (!getMinion(eventData.dsth, 6))
             delayedCall(function() {
                 if (eventData.dsth === target)
-                    myMinion.splice(eventData.myIndex + 1, 0, Minion(ALL_CARDS[13]));
+                    myMinion.splice(eventData.myIndex + 1, 0, Minion(ALL_CARDS[13], eventData.owner));
                 else
-                    enemyMinion.splice(eventData.myIndex + 1, 0, Minion(ALL_CARDS[13]));
+                    enemyMinion.splice(eventData.myIndex + 1, 0, Minion(ALL_CARDS[13], eventData.owner));
             });
     }
     then(eventData, extras, isWrite);
