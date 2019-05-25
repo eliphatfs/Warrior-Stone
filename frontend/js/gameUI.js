@@ -18,6 +18,7 @@ function reprDesc(card) {
     else if (card.type == "W")
         ret += card.damage + "-" + card.durability + " ";
     ret += ((card.special & TAUNT) ? "嘲讽 " : "")
+    ret += ((card.special & CHARGE) ? "冲锋 " : "")
     + (card.battlecry ? "战吼 ": "")
     + (card.deathrattle ? "亡语 ": "");
     return ret;
@@ -71,7 +72,7 @@ function rebuildMinions() {
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ATK)", myMinion[i].damage);
         proto = proto.replace("$(EXTRA)", myMinion[i].highlight ? "background-color: #beb": "");
-        proto = proto.replace("$(DESC)", ((myMinion[i].special & TAUNT) ? "嘲讽" : "") + (myMinion[i].sleeping ? "Zzzz": "随从"));
+        proto = proto.replace("$(DESC)", ((myMinion[i].special & CHARGE) ? "冲锋" : "") + ((myMinion[i].special & TAUNT) ? "嘲讽" : "") + (myMinion[i].sleeping ? "Zzzz": "随从"));
         $("#FMS")[0].innerHTML += proto;
     }
     $("#EMS")[0].innerHTML = "";
@@ -86,7 +87,7 @@ function rebuildMinions() {
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(EXTRA)", enemyMinion[i].highlight ? "background-color: #beb": "");
         proto = proto.replace("$(ATK)", enemyMinion[i].damage);
-        proto = proto.replace("$(DESC)", ((enemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (enemyMinion[i].sleeping ? "Zzzz": "随从"));
+        proto = proto.replace("$(DESC)", ((enemyMinion[i].special & CHARGE) ? "冲锋" : "") + ((enemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (enemyMinion[i].sleeping ? "Zzzz": "随从"));
         $("#EMS")[0].innerHTML += proto;
     }
 }
