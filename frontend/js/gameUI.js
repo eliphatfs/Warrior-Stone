@@ -2,7 +2,7 @@ var uiQueue = [];
 var uiMyMinion = [];
 var uiEnemyMinion = [];
 var uiDamageQueue = [];
-var spliceIndex = 10000;
+var spliceIndex = 100000;
 var UI_REFRESH_DELAY = 100;
 
 function reprHero(hero) {
@@ -63,8 +63,8 @@ function flushShowDamageQueue() {
                 if (indexes[i] === -1) {
                     elmID = heroes[i] === target ? "#FHB" : "#EHB";
                 } else {
+                    console.log(uiMyMinion);
                     console.log(uiEnemyMinion);
-                    console.log(enemyMinion);
                     var pos = getMinionPosByTimeStampRegioned(indexes[i], uiMyMinion, uiEnemyMinion);
                     elmID = "#M" + pos[0] + pos[1];
                 }
@@ -77,6 +77,7 @@ function flushShowDamageQueue() {
             rebuildHero();
             rebuildMinions();
         }]);
+        spliceIndex = 100000;
         uiDamageQueue = [];
     };
     pack();
@@ -145,9 +146,9 @@ function printCallStack() {
 }
 
 function rebuildMinions() {
-    printCallStack();
-    uiMyMinion = myMinion;
-    uiEnemyMinion = enemyMinion;
+    // printCallStack();
+    uiMyMinion = myMinion.concat();
+    uiEnemyMinion = enemyMinion.concat();
     uiQueue.push([200, function() {
         rebuildMinionsInternal();
     }]);
@@ -187,9 +188,10 @@ function rebuildMinionsInternal() {
 }
 
 setInterval(function() {
-    if (uiQueue.length > 0) {
+    while (uiQueue.length > 0) {
         if (uiQueue[0][0] > 0) {
             uiQueue[0][0] -= UI_REFRESH_DELAY;
+            break;
         } else {
             uiQueue.shift()[1]();
         }
