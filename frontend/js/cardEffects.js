@@ -307,6 +307,34 @@ function armorHit(eventData, extras, isWrite, then) {
     }
 }
 
+// 怒袭
+function bashHit(eventData, extras, isWrite, then) {
+    var he = eventData.hero === target ? me : enemy;
+    if (isWrite) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            return true;
+        };
+        if (!checkSelectionTargets()) {
+            selectState = "failed";
+            return;
+        }
+        targetingCallback = function(thero, tindex) {
+            extras.push(thero);
+            extras.push(tindex);
+            he.armor += 3;
+            spellAttack(3, thero, tindex, "你使用怒袭");
+            then(eventData, extras, isWrite);
+        }
+    } else {
+        var h = extras.shift();
+        var ind = extras.shift();
+        he.armor += 3;
+        spellAttack(3, h, ind, "敌方使用怒袭");
+        then(eventData, extras, isWrite);
+    }
+}
+
 // 叠甲
 function gainArmor(count) {
     return function(eventData, extras, isWrite, then) {
@@ -425,7 +453,8 @@ var ALL_EFFECTS = {
     "18": improvedSkill,
     "19": enemySummonMinion,
     "20": setHealthTo15,
-    "21": killMinionDamage7
+    "21": killMinionDamage7,
+    "22": bashHit
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {
