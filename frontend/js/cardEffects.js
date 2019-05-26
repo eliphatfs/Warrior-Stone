@@ -369,6 +369,41 @@ function setHealthTo15(eventData, extras, isWrite, then) {
     }
 }
 
+function killMinionDamage7(eventData, extras, isWrite, then) {
+    if (isWrite) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            return index !== -1 && getMinion(hero, index) && getMinion(hero, index).damage >= 7;
+        };
+        if (!checkSelectionTargets()) {
+            extras.push(0);
+            selectState = "skipped";
+            then(eventData, extras, isWrite);
+            return;
+        }
+        targetingCallback = function(thero, tindex) {
+            extras.push(1);
+            extras.push(thero);
+            extras.push(tindex);
+            extras.push(getMinion(thero, tindex).health);
+            spellAttack(getMinion(thero, tindex).health, thero, tindex, "你使用王牌猎人");
+            then(eventData, extras, isWrite);
+        }
+    } else {
+        if (extras.shift() === 0) {
+            then(eventData, extras, isWrite);
+            return;
+        }
+        var h = extras.shift();
+        var ind = extras.shift();
+        var dmg = extras.shift();
+        delayedCall(function(){
+            spellAttack(dmg, h, ind, "敌方使用王牌猎人");
+            then(eventData, extras, isWrite);
+        });
+    }
+}
+
 var ALL_EFFECTS = {
     "15": moreManaEffect,
     "1": innerBreak,
@@ -389,7 +424,8 @@ var ALL_EFFECTS = {
     "17": gainArmor(5),
     "18": improvedSkill,
     "19": enemySummonMinion,
-    "20": setHealthTo15
+    "20": setHealthTo15,
+    "21": killMinionDamage7
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {
