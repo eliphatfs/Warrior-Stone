@@ -345,6 +345,30 @@ function enemySummonMinion(eventData, extras, isWrite, then) {
     then(eventData, extras, isWrite);
 }
 
+function setHealthTo15(eventData, extras, isWrite, then) {
+    if (isWrite) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            return index === -1;
+        };
+        if (!checkSelectionTargets()) {
+            selectState = "failed";
+            return;
+        }
+        targetingCallback = function(thero, tindex) {
+            extras.push(thero);
+            var he = thero === target ? me : enemy;
+            he.health = 15;
+            then(eventData, extras, isWrite);
+        }
+    } else {
+        var h = extras.shift();
+        var he = h === target ? me : enemy;
+        he.health = 15;
+        then(eventData, extras, isWrite);
+    }
+}
+
 var ALL_EFFECTS = {
     "15": moreManaEffect,
     "1": innerBreak,
@@ -364,7 +388,8 @@ var ALL_EFFECTS = {
     "16": armorHit,
     "17": gainArmor(5),
     "18": improvedSkill,
-    "19": enemySummonMinion
+    "19": enemySummonMinion,
+    "20": setHealthTo15
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {
