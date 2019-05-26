@@ -12,8 +12,21 @@ function doAlert(hint) {
     alert(hint);
 }
 
+function printCallStack() {
+    var i = 0;
+    var fun = arguments.callee;
+    do {
+        fun = fun.arguments.callee.caller;
+        console.log(++i + ': ' + fun);
+    } while (fun);
+}
+
 function randInt(low, high) {
     return low + Math.floor(Math.random() * (high - low));
+}
+
+function randChoice(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function getQueryParam(name) {

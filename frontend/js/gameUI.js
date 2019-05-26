@@ -164,15 +164,6 @@ function rebuildHandInternal() {
     }
 }
 
-function printCallStack() {
-    var i = 0;
-    var fun = arguments.callee;
-    do {
-        fun = fun.arguments.callee.caller;
-        console.log(++i + ': ' + fun);
-    } while (fun);
-}
-
 function rebuildMinions() {
     // printCallStack();
     uiMyMinion = myMinion.concat();
