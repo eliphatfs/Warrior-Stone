@@ -328,6 +328,23 @@ function improvedSkill(eventData, extras, isWrite, then) {
     then(eventData, extras, isWrite);
 }
 
+function enemySummonMinion(eventData, extras, isWrite, then) {
+    var hisDeck = eventData.hero === target ? enemyDeck : myDeck;
+    var hisMinion = eventData.hero === target ? enemyMinion : myMinion;
+    var theChoice = -1;
+    for (var i=0; i<hisDeck.length; i++) {
+        if (hisDeck[i].type == "M") {
+            theChoice = i;
+            break;
+        }
+    }
+    if (theChoice > -1) {
+        var card = hisDeck.splice(theChoice, 1)[0];
+        hisMinion.push(Minion(card, eventData.hero === target ? myFriend() : target));
+    }
+    then(eventData, extras, isWrite);
+}
+
 var ALL_EFFECTS = {
     "15": moreManaEffect,
     "1": innerBreak,
@@ -346,7 +363,8 @@ var ALL_EFFECTS = {
     "14": costSub1,
     "16": armorHit,
     "17": gainArmor(5),
-    "18": improvedSkill
+    "18": improvedSkill,
+    "19": enemySummonMinion
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {
