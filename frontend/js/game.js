@@ -345,7 +345,7 @@ function dealDamage(hero, index, damage, source) {
                                 minion[i].highlight = true;
                                 var thiz = minion.splice(i, 1)[0];
                                 defered = true;
-                                activateEffect(thiz.deathrattle, {hero: hero}, [], true, function(a, b, c) {
+                                activateEffect(thiz.deathrattle, {hero: hero}, [], target === 1, function(a, b, c) {
                                 });
                             } else minion.splice(i, 1);
                 }]);
