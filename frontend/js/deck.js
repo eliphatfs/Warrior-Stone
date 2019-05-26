@@ -1,6 +1,7 @@
 var TAUNT = 1;
 var DRAGON = 2;
 var CHARGE = 4;
+var SILENCE = 8;
 
 var WARRIOR = 1;
 
@@ -98,8 +99,10 @@ var ALL_CARDS = [
     endescriptify("盾牌侍女", "战吼：护甲+5")(CardMinion(6, 5, 5, 0, 17, 0, 0, 0, 0)),
     endescriptify("铜墙铁壁", "护甲+5")(CardSpell(1, 17)),
     endescriptify("王牌猎人", "战吼：消灭一个攻击力≥7的随从")(CardMinion(5, 4, 2, 0, 21, 0, 0, 0, 0)),
-    endescriptify("怒袭", "造成3点伤害；护甲+3")(CardSpell(1, 22)),
+    endescriptify("怒袭", "造成3点伤害；护甲+3")(CardSpell(3, 22)),
     endescriptify("红龙", "战吼：将一方英雄的生命值置为15")(CardMinion(9, 8, 8, 0, 20, 0, 0, 0, 0)),
     endescriptify("死亡领主", "嘲讽，亡语：从对方牌库中随机召唤一个随从")(CardMinion(3, 2, 8, TAUNT, 0, 19, 0, 0, 0)),
+    endescriptify("猫头鹰", "战吼：沉默一个随从")(CardMinion(2, 2, 1, 0, 23, 0, 0, 0, 0)),
+    endescriptify("复仇", "对所有随从造成1点伤害。如果你的生命值小于或等于12点，则改为造成3点伤害。")(CardSpell(2, 24)),
     endescriptify("图哈特", "战吼：升级你的基础英雄技能")(CardMinion(6, 6, 3, 0, 18, 0, 0, 0, 0))
 ];

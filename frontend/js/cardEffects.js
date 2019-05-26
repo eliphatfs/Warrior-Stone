@@ -397,6 +397,48 @@ function setHealthTo15(eventData, extras, isWrite, then) {
     }
 }
 
+function silenceMinion(minion) {
+    minion.special = SILENCE;
+    minion.deathrattle = 0;
+    minion.battlecry = 0;
+    minion.useevent = 0;
+    minion.roundend = 0;
+    minion.hurtevent = 0;
+    minion.feature = 0;
+}
+
+// 猫头鹰
+function theEagles(eventData, extras, isWrite, then) {
+    if (isWrite) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            return index !== -1;
+        };
+        if (!checkSelectionTargets()) {
+            extras.push(0);
+            selectState = "skipped";
+            then(eventData, extras, isWrite);
+            return;
+        }
+        targetingCallback = function(thero, tindex) {
+            extras.push(1);
+            extras.push(thero);
+            extras.push(tindex);
+            silenceMinion(getMinion(thero, tindex));
+            then(eventData, extras, isWrite);
+        }
+    } else {
+        if (extras.shift() === 0) {
+            then(eventData, extras, isWrite);
+            return;
+        }
+        var h = extras.shift();
+        var ind = extras.shift();
+        silenceMinion(getMinion(h, ind));
+        then(eventData, extras, isWrite);
+    }
+}
+
 function killMinionDamage7(eventData, extras, isWrite, then) {
     if (isWrite) {
         selectState = "targeting";
@@ -432,6 +474,21 @@ function killMinionDamage7(eventData, extras, isWrite, then) {
     }
 }
 
+function revenge(eventData, extras, isWrite, then) {
+    var he = eventData.hero === target ? me : enemy;
+    var dmg = he.health > 12 ? 1 : 3;
+    delayedCall(function(){
+        for (var h=1; h<=2; h++)
+            for (var i=0; i<7; i++)
+                if (getMinion(h, i))
+                    spellAttackNoFlushQueue(dmg, h, i, reprHero(eventData.hero) + "使用复仇");
+        flushAttackQueue();
+    });
+    delayedCall(function(){
+        then(eventData, extras, isWrite);
+    });
+}
+
 var ALL_EFFECTS = {
     "15": moreManaEffect,
     "1": innerBreak,
@@ -454,7 +511,9 @@ var ALL_EFFECTS = {
     "19": enemySummonMinion,
     "20": setHealthTo15,
     "21": killMinionDamage7,
-    "22": bashHit
+    "22": bashHit,
+    "23": theEagles,
+    "24": revenge
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {

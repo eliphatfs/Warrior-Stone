@@ -186,7 +186,7 @@ function rebuildMinionsInternal() {
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(ATK)", uiMyMinion[i].damage);
         proto = proto.replace("$(EXTRA)", uiMyMinion[i].highlight ? "background-color: #beb": "");
-        proto = proto.replace("$(DESC)", ((uiMyMinion[i].special & CHARGE) ? "冲锋" : "") + ((uiMyMinion[i].special & TAUNT) ? "嘲讽" : "") + (uiMyMinion[i].sleeping ? "Zzzz": "随从"));
+        proto = proto.replace("$(DESC)", ((uiMyMinion[i].special & SILENCE) ? "沉默" : "") + ((uiMyMinion[i].special & CHARGE) ? "冲锋" : "") + ((uiMyMinion[i].special & TAUNT) ? "嘲讽" : "") + (uiMyMinion[i].sleeping ? "Zzzz": "随从"));
         $("#FMS")[0].innerHTML += proto;
     }
     $("#EMS")[0].innerHTML = "";
@@ -201,7 +201,7 @@ function rebuildMinionsInternal() {
         proto = proto.replace("$(ID)", i);
         proto = proto.replace("$(EXTRA)", uiEnemyMinion[i].highlight ? "background-color: #beb": "");
         proto = proto.replace("$(ATK)", uiEnemyMinion[i].damage);
-        proto = proto.replace("$(DESC)", ((uiEnemyMinion[i].special & CHARGE) ? "冲锋" : "") + ((uiEnemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (uiEnemyMinion[i].sleeping ? "Zzzz": "随从"));
+        proto = proto.replace("$(DESC)", ((uiEnemyMinion[i].special & SILENCE) ? "沉默" : "") + ((uiEnemyMinion[i].special & CHARGE) ? "冲锋" : "") + ((uiEnemyMinion[i].special & TAUNT) ? "嘲讽" : "") + (uiEnemyMinion[i].sleeping ? "Zzzz": "随从"));
         $("#EMS")[0].innerHTML += proto;
     }
 }
