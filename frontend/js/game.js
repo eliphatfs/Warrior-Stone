@@ -103,6 +103,9 @@ function messageHandler(msg) {
         enemy.skillOn = false;
         rebuildHero();
     }
+    else if (msg.type == "expression") {
+        expression(myFriend(), msg.contents);
+    }
     else if (msg.type == "enemy_deck") {
         enemyDeck = msg.deck;
         if (target === 2) whoFirst = msg.who_first;
@@ -540,6 +543,8 @@ function hitMyHero() {
             targetingCallback(target, -1);
             selectState = "";
         }
+    } else {
+        showModalExpressions();
     }
 }
 
@@ -555,6 +560,24 @@ function skill() {
             doAlert("费用不足：" + me.mana + " < 2！");
         }
     } else doAlert("英雄技能当前不可用");
+}
+
+function sendExpressionInternal(contents) {
+    sendMessage({"type": "expression", "contents": contents});
+    expression(target, contents);
+}
+
+function sendExpression(which) {
+    closeModalExpressions();
+    if (which < 3) {
+        if (which === 0) sendExpressionInternal("你好。");
+        else if (which === 1) sendExpressionInternal("打得不错。");
+        else if (which === 2) sendExpressionInternal("真厉害。");
+    } else {
+        if (which === 3) sendExpressionInternal("谢谢。");
+        else if (which === 4) sendExpressionInternal("发生这种事我很抱歉。");
+        else if (which === 5) sendExpressionInternal("我要跟随你！");
+    }
 }
 
 $.ajax({

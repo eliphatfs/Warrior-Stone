@@ -2,6 +2,45 @@
 <head>
     <title>Game - Warrior Stone</title>
     <meta charset="utf-8" />
+    <style>
+        /* The Modal (background) */
+        .modal {
+          display: none; /* Hidden by default */
+          position: fixed; /* Stay in place */
+          z-index: 1; /* Sit on top */
+          left: 0;
+          top: 0;
+          width: 100%; /* Full width */
+          height: 100%; /* Full height */
+          overflow: auto; /* Enable scroll if needed */
+          background-color: rgb(0,0,0); /* Fallback color */
+          background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content/Box */
+        .modal-content {
+          background-color: #fefefe;
+          margin: 20% auto; /* 15% from the top and centered */
+          padding: 20px;
+          border: 1px solid #888;
+          width: 80%; /* Could be more or less, depending on screen size */
+        }
+
+        /* The Close Button */
+        .close {
+          color: #aaa;
+          float: right;
+          font-size: 28px;
+          font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+          color: black;
+          text-decoration: none;
+          cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <div id="wait">等待对手连线……</div>
@@ -39,6 +78,29 @@
     <p id="Hand">
         
     </p>
+    </div>
+    <div id="modalExpressions" class="modal">
+        <div class="modal-content" style="font-size: 24px">
+            <span class="close" onclick="closeModalExpressions()">&times;</span>
+            <p style="text-align: center;">
+                <span>&nbsp;</span>
+            </p>
+            <p style="text-align: center;">
+                <button type="button" style="width:45%; text-align: center;" onclick="sendExpression(0)">你好</button>
+                <span>&nbsp;</span>
+                <button type="button" style="width:45%; text-align: center;" onclick="sendExpression(1)">称赞</button>
+            </p>
+            <p style="text-align: center;">
+                <button type="button" style="width:45%; text-align: center;" onclick="sendExpression(2)">惊叹</button>
+                <span>&nbsp;</span>
+                <button type="button" style="width:45%; text-align: center;" onclick="sendExpression(3)">感谢</button>
+            </p>
+            <p style="text-align: center;">
+                <button type="button" style="width:45%; text-align: center;" onclick="sendExpression(4)">失误</button>
+                <span>&nbsp;</span>
+                <button type="button" style="width:45%; text-align: center;" onclick="sendExpression(5)">威胁</button>
+            </p>
+        </div>
     </div>
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/helper.js"></script>

@@ -43,6 +43,34 @@ function queueShowDamage(hero, timeStamp, damage) {
     uiDamageQueue.push(damage);
 }
 
+function showModalExpressions() {
+    var modal = $("#modalExpressions")[0];
+    modal.style.display = "block";
+}
+
+function closeModalExpressions() {
+    var modal = $("#modalExpressions")[0];
+    modal.style.display = "none";
+}
+
+function expression(hero, contents) {
+    var pack = function() {
+        var old;
+        uiQueue.push([0, function() {
+            var elmID = hero === target ? "#FHB" : "#EHB";
+            var elm = $(elmID)[0];
+            old = elm.innerHTML;
+            elm.innerHTML = "<font size='36'>" + contents + "</font>";
+        }]);
+        uiQueue.push([1200, function() {
+            var elmID = hero === target ? "#FHB" : "#EHB";
+            var elm = $(elmID)[0];
+            elm.innerHTML = old;
+        }]);
+    };
+    pack();
+}
+
 function flushShowDamageQueue() {
     var pack = function() {
         var elms = [], olds = [];
