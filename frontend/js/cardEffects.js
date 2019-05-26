@@ -319,7 +319,14 @@ function gainArmor(count) {
     }
 }
 
-
+function improvedSkill(eventData, extras, isWrite, then) {
+    var he = eventData.hero === target ? me : enemy;
+    he.improvedSkill = true;
+    uiQueue.push([0, function() {
+        $("#" + (eventData.hero === target ? "F" : "E") + "HSD")[0].innerHTML = "获得4护甲";
+    }]);
+    then(eventData, extras, isWrite);
+}
 
 var ALL_EFFECTS = {
     "15": moreManaEffect,
@@ -338,7 +345,8 @@ var ALL_EFFECTS = {
     "13": costAdd5,
     "14": costSub1,
     "16": armorHit,
-    "17": gainArmor(5)
+    "17": gainArmor(5),
+    "18": improvedSkill
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {

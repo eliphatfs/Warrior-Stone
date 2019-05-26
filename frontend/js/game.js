@@ -7,8 +7,8 @@ var enemyHand = [];
 var myMinion = [];
 var enemyMinion = [];
 var whoFirst = Math.random() < 0.5 ? 1 : 2;
-var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false};
-var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false};
+var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false, improvedSkill: false};
+var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false, improvedSkill: false};
 var state = "linking";
 var selectState = "idle";
 var exchangeCardPool = [];
@@ -99,7 +99,7 @@ function messageHandler(msg) {
         doAlert("敌方使用了英雄技能");
         gameHistory = "敌方使用了英雄技能\n" + gameHistory;
         enemy.mana -= 2;
-        enemy.armor += 2;
+        enemy.armor += enemy.improvedSkill ? 4 : 2;
         enemy.skillOn = false;
         rebuildHero();
     }
@@ -552,7 +552,7 @@ function skill() {
     if (me.skillOn) {
         if (me.mana >= 2) {
             me.mana -= 2;
-            me.armor += 2;
+            me.armor += me.improvedSkill ? 4 : 2;
             me.skillOn = false;
             sendMessage({"type": "use_skill"});
             rebuildHero();
