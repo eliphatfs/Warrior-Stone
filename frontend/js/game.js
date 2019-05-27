@@ -185,7 +185,7 @@ function playCard(hero, extras, index) {
     var minion = hero === target ? myMinion : enemyMinion;
     var eminion = hero !== target ? myMinion : enemyMinion;
     var he = hero === target ? me : enemy;
-    he.mana -= hand[index].cost;
+    he.mana -= hand[index].cost + (hand[index].type == "S" && he.spellCost5More ? 5 : 0);
     var isWrite = hero === target;
     
     if (target === 1) {
