@@ -350,9 +350,11 @@ function gainArmor(count) {
 function improvedSkill(eventData, extras, isWrite, then) {
     var he = eventData.hero === target ? me : enemy;
     he.improvedSkill = true;
+    he.skillOn = true;
     uiQueue.push([0, function() {
         $("#" + (eventData.hero === target ? "F" : "E") + "HSD")[0].innerHTML = "获得4护甲";
     }]);
+    rebuildHero();
     then(eventData, extras, isWrite);
 }
 

@@ -7,8 +7,8 @@ var enemyHand = [];
 var myMinion = [];
 var enemyMinion = [];
 var whoFirst = Math.random() < 0.5 ? 1 : 2;
-var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false, improvedSkill: false};
-var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false, improvedSkill: false};
+var me = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false, improvedSkill: false, weapon: null};
+var enemy = {health: 30, armor: 0, job: WARRIOR, mana: 0, nextFatigue: 1, skillOn: true, minionNoDeath: false, spellCost5More: false, improvedSkill: false, weapon: null};
 var state = "linking";
 var selectState = "idle";
 var exchangeCardPool = [];
@@ -576,7 +576,7 @@ function sendExpression(which) {
     } else {
         if (which === 3) sendExpressionInternal("谢谢。");
         else if (which === 4) sendExpressionInternal("发生这种事我很抱歉。");
-        else if (which === 5) sendExpressionInternal("我要跟随你！");
+        else if (which === 5) sendExpressionInternal("我要粉碎你！");
     }
 }
 

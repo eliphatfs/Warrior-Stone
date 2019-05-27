@@ -14,3 +14,12 @@ function Minion(card, hero) {
     timeStamp++;
     return minion;
 }
+
+function Weapon(card, hero) {
+    var minion = $.extend(true, {}, card);
+    minion.card = card;
+    minion.timeStamp = timeStamp;
+    minion.sleeping = false;
+    timeStamp++;
+    return minion;
+}
