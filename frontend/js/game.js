@@ -549,7 +549,7 @@ function hitMyHero() {
 }
 
 function skill() {
-    if (me.skillOn) {
+    if (me.skillOn && myRound()) {
         if (me.mana >= 2) {
             me.mana -= 2;
             me.armor += me.improvedSkill ? 4 : 2;
