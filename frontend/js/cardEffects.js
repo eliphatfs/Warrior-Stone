@@ -188,6 +188,13 @@ function battleBurn(eventData, extras, isWrite, then) {
     drawCard(eventData.hero, 1);
 }
 
+function shieldDrawCard(eventData, extras, isWrite, then) {
+    var he = eventData.hero === target ? me : enemy;
+    he.armor += 5;
+    then(eventData, extras, isWrite);
+    drawCard(eventData.hero, 1);
+}
+
 function messyFight(eventData, extras, isWrite, then) {
     var totalCount = myMinion.length + enemyMinion.length;
     if (totalCount < 2) {
@@ -515,7 +522,8 @@ var ALL_EFFECTS = {
     "21": killMinionDamage7,
     "22": bashHit,
     "23": theEagles,
-    "24": revenge
+    "24": revenge,
+    "25": shieldDrawCard
 }
 
 function activateEffect(effect, eventData, extras, isWrite, then) {

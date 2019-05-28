@@ -105,5 +105,6 @@ var ALL_CARDS = [
     endescriptify("猫头鹰", "战吼：沉默一个随从")(CardMinion(2, 2, 1, 0, 23, 0, 0, 0, 0)),
     endescriptify("复仇", "对所有随从造成1点伤害。如果你的生命值小于或等于12点，则改为造成3点伤害。")(CardSpell(2, 24)),
     endescriptify("图哈特", "战吼：升级你的基础英雄技能")(CardMinion(6, 6, 3, 0, 18, 0, 0, 0, 0)),
-    endescriptify("小斧子", "")(CardWeapon(2, 3, 2, 0, 0, 0))
+    endescriptify("小斧子", "")(CardWeapon(2, 3, 2, 0, 0, 0)),
+    endescriptify("盾牌格挡", "护甲+5，抽一张牌")(CardSpell(3, 25))
 ];
