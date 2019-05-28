@@ -24,10 +24,12 @@ function reprDesc(card) {
         ret += card.damage + "-" + card.health + " ";
     else if (card.type == "W")
         ret += card.damage + "-" + card.durability + " ";
-    ret += ((card.special & TAUNT) ? "嘲讽 " : "")
-    ret += ((card.special & CHARGE) ? "冲锋 " : "")
-    + (card.battlecry ? "战吼 ": "")
-    + (card.deathrattle ? "亡语 ": "");
+    if (card.type == "M") {
+        ret += ((card.special & TAUNT) ? "嘲讽 " : "")
+        ret += ((card.special & CHARGE) ? "冲锋 " : "")
+        + (card.battlecry ? "战吼 ": "")
+        + (card.deathrattle ? "亡语 ": "");
+    }
     return ret;
 }
 
@@ -135,12 +137,14 @@ function rebuildHeroInternal() {
     $("#EA")[0].innerHTML = enemy.armor;
     $("#EM")[0].innerHTML = enemy.mana;
     $("#ECH")[0].innerHTML = enemyHand.length;
+    $("#EW")[0].innerHTML = enemy.weapon === null ? "N/A" : reprDesc(enemy.weapon);
     $("#ECD")[0].innerHTML = enemyDeck.length;
     $("#EHS")[0].innerHTML = enemy.skillOn ? "可用" : "已使用";
     
     $("#FH")[0].innerHTML = me.health;
     $("#FA")[0].innerHTML = me.armor;
     $("#FM")[0].innerHTML = me.mana;
+    $("#FW")[0].innerHTML = me.weapon === null ? "N/A" : reprDesc(me.weapon);
     $("#FCH")[0].innerHTML = myHand.length;
     $("#FCD")[0].innerHTML = myDeck.length;
     $("#FHS")[0].innerHTML = me.skillOn ? "可用" : "已使用";

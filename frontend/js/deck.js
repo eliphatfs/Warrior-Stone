@@ -86,7 +86,7 @@ var ALL_CARDS = [
     endescriptify("苦痛", "受到伤害时抽一张牌")(CardMinion(3, 1, 3, 0, 0, 0, 9, 0, 0)),
     endescriptify("暴虐食尸鬼", "战吼：对所有随从造成一点伤害")(CardMinion(3, 3, 3, 0, 6, 0, 0, 0, 0)),
     endescriptify("爆牌鱼", "战吼：双方抽两张牌")(CardMinion(3, 2, 2, 0, 10, 0, 0, 0, 0)),
-    endescriptify("死咬", "冲锋，亡语：对所有随从造成一点伤害")(CardMinion(4, 4, 2, CHARGE, 0, 6, 0, 0, 0)),
+    endescriptify("死咬", "亡语：对所有随从造成一点伤害")(CardWeapon(4, 4, 2, 0, 6, 0)),
     endescriptify("奴隶主", "每当受到不致命的伤害时召唤一个奴隶主")(CardMinion(5, 3, 3, 0, 0, 0, 11, 0, 0)),
     endescriptify("绝命乱斗", "随机选择一个随从，消灭其他所有随从")(CardSpell(5, 12)),
     endescriptify("洛欧塞布", "战吼：下回合你的对手法术法力消耗+5")(CardMinion(5, 5, 5, 0, 13, 0, 0, 0, 0)),
@@ -104,5 +104,6 @@ var ALL_CARDS = [
     endescriptify("死亡领主", "嘲讽，亡语：从对方牌库中随机召唤一个随从")(CardMinion(3, 2, 8, TAUNT, 0, 19, 0, 0, 0)),
     endescriptify("猫头鹰", "战吼：沉默一个随从")(CardMinion(2, 2, 1, 0, 23, 0, 0, 0, 0)),
     endescriptify("复仇", "对所有随从造成1点伤害。如果你的生命值小于或等于12点，则改为造成3点伤害。")(CardSpell(2, 24)),
-    endescriptify("图哈特", "战吼：升级你的基础英雄技能")(CardMinion(6, 6, 3, 0, 18, 0, 0, 0, 0))
+    endescriptify("图哈特", "战吼：升级你的基础英雄技能")(CardMinion(6, 6, 3, 0, 18, 0, 0, 0, 0)),
+    endescriptify("小斧子", "")(CardWeapon(2, 3, 2, 0, 0, 0))
 ];

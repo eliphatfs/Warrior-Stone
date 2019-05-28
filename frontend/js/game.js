@@ -55,6 +55,7 @@ function roundStart() {
                     });
                 }
         if (myRound()) {
+            if (me.weapon) me.weapon.sleeping = false;
             enemy.spellCost5More = false;
             me.mana = Math.ceil(round / 2);
             if (me.mana > 10) me.mana = 10;
@@ -92,6 +93,17 @@ function messageHandler(msg) {
     else if (msg.type == "attack") {
         if (msg.srch !== target && msg.srci !== -1) {
             enemyMinion[msg.srci].sleeping = true;
+        }
+        else {
+            enemy.weapon.sleeping = true;
+            enemy.weapon.durability--;
+            if (enemy.weapon.durability <= 0) {
+                attackEventQueue.push([enemy.weapon.timeStamp + 100000, function() {
+                    
+                    activateEffect(enemy.weapon.deathrattle, {hero: myFriend()}, [], target === 1, function(a, b, c) {
+                              enemy.weapon = null; })}]);
+                // me.weapon = null;
+            }
         }
         delayedCall(function() { simpleAttack(msg.srch, msg.srci, msg.dsth, msg.dsti); });
     }
@@ -227,6 +239,8 @@ function playCard(hero, extras, index) {
             defered = true;
             activateEffect(hand[index].battlecry, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
                 if (isWrite) gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
+                if (he.weapon) activateEffect(he.weapon.deathrattle, {hero: hero}, [], target === 1, function(a, b, c) {
+                               });
                 he.weapon = Weapon(hand[index], hero);
                 // rebuildHero();
                 if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
@@ -582,12 +596,15 @@ function hitMyHero() {
             me.weapon.sleeping = true;
             me.weapon.durability--;
             if (me.weapon.durability <= 0) {
-                attackEventQueue.push([me.weapon.timeStamp + 100000, function() {activateEffect(me.weapon.deathrattle, {hero: target}, [], target === 1, function(a, b, c) {
+                attackEventQueue.push([me.weapon.timeStamp + 100000, function() {
+                    
+                    activateEffect(me.weapon.deathrattle, {hero: target}, [], target === 1, function(a, b, c) {
+                    me.weapon = null;
                                })}]);
-                me.weapon = null;
+                // me.weapon = null;
             }
             delayedCall(function(){ simpleAttack(target, -1, thero, tindex); });
-            sendMessage({"type": "attack", "srch": hero, "srci": -1, "dsth": thero, "dsti": tindex});
+            sendMessage({"type": "attack", "srch": target, "srci": -1, "dsth": thero, "dsti": tindex});
         }
     } else {
         showModalExpressions();
