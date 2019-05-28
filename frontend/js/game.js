@@ -222,6 +222,22 @@ function playCard(hero, extras, index) {
             minion.push(Minion(hand[index], hero));
             rebuildMinions();
         }
+    } else if (hand[index].type === "W") {
+        if (hand[index].battlecry > 0) {
+            defered = true;
+            activateEffect(hand[index].battlecry, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
+                if (isWrite) gameHistory = "你使用了" + myHand[index].name + "\n" + gameHistory;
+                he.weapon = Weapon(hand[index], hero);
+                // rebuildHero();
+                if (isWrite) sendMessage({"type": "play_card", "index": index, "extras": extras});
+                hand.splice(index, 1);
+                
+                rebuildHand();
+                rebuildHero();
+            });
+        } else {
+            he.weapon = Weapon(hand[index], hero);
+        }
     } else if (hand[index].type === "S") {
         defered = true;
         activateEffect(hand[index].useevent, {hero: hero, index: index}, extras, isWrite, function(a,b,c){
@@ -417,7 +433,12 @@ function act() {
 }
 
 function getDamage(hero, index) {
-    if (index === -1) return 0;
+    if (index === -1) {
+        var he = hero === target ? me : enemy;
+        if (hero === target && myRound() && he.weapon) return he.weapon.damage;
+        else if (hero === myFriend() && !myRound() && he.weapon) return he.weapon.damage;
+        return 0;
+    }
     var minion = hero === target ? myMinion : enemyMinion;
     return minion[index].damage;
 }
@@ -518,7 +539,7 @@ function hitMinion(hero, index) {
             myMinion[index].sleeping = true;
             delayedCall(function(){ simpleAttack(target, index, thero, tindex); });
             sendMessage({"type": "attack", "srch": hero, "srci": index, "dsth": thero, "dsti": tindex});
-        }
+        };
     } else {
         doAlert(reprCardDetailed(getMinion(hero, index)));
     }
@@ -542,6 +563,31 @@ function hitMyHero() {
         } else {
             targetingCallback(target, -1);
             selectState = "";
+        }
+    } else if (myRound() && me.weapon && !me.weapon.sleeping) {
+        selectState = "targeting";
+        targetSelector = function(hero, index) {
+            if (hero === target)
+                return false;
+            var taunt = false;
+            for (var i=0; i<enemyMinion.length; i++)
+                if (enemyMinion[i].special & TAUNT) {
+                    taunt = true; break;
+                }
+            if (taunt && (index === -1 || (enemyMinion[index].special & TAUNT) === 0))
+                return false;
+            return true;
+        };
+        targetingCallback = function(thero, tindex) {
+            me.weapon.sleeping = true;
+            me.weapon.durability--;
+            if (me.weapon.durability <= 0) {
+                attackEventQueue.push([me.weapon.timeStamp + 100000, function() {activateEffect(me.weapon.deathrattle, {hero: target}, [], target === 1, function(a, b, c) {
+                               })}]);
+                me.weapon = null;
+            }
+            delayedCall(function(){ simpleAttack(target, -1, thero, tindex); });
+            sendMessage({"type": "attack", "srch": hero, "srci": -1, "dsth": thero, "dsti": tindex});
         }
     } else {
         showModalExpressions();
