@@ -54,7 +54,7 @@ function killInperfect(eventData, extras, isWrite, then) {
     if (isWrite) {
         selectState = "targeting";
         targetSelector = function(hero, index) {
-            return index !== -1 && getMinion(hero, index).health < getMinion(hero, index).maxHealth;
+            return hero !== target && index !== -1 && getMinion(hero, index).health < getMinion(hero, index).maxHealth;
         };
         if (!checkSelectionTargets()) {
             selectState = "failed";
