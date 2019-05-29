@@ -100,8 +100,11 @@ function messageHandler(msg) {
             if (enemy.weapon.durability <= 0) {
                 attackEventQueue.push([enemy.weapon.timeStamp + 100000, function() {
                     
-                    activateEffect(enemy.weapon.deathrattle, {hero: myFriend()}, [], target === 1, function(a, b, c) {
-                              enemy.weapon = null; })}]);
+                    if(enemy.weapon.deathrattle) activateEffect(enemy.weapon.deathrattle, {hero: myFriend()}, [], target === 1, function(a, b, c) {
+                              enemy.weapon = null; });
+                    else enemy.weapon = null;
+                }]);
+                    
                 // me.weapon = null;
             }
         }
@@ -598,9 +601,12 @@ function hitMyHero() {
             if (me.weapon.durability <= 0) {
                 attackEventQueue.push([me.weapon.timeStamp + 100000, function() {
                     
-                    activateEffect(me.weapon.deathrattle, {hero: target}, [], target === 1, function(a, b, c) {
+                    if (me.weapon.deathrattle) activateEffect(me.weapon.deathrattle, {hero: target}, [], target === 1, function(a, b, c) {
                     me.weapon = null;
-                               })}]);
+                               });
+                    else me.weapon = null;
+                }]);
+                    
                 // me.weapon = null;
             }
             delayedCall(function(){ simpleAttack(target, -1, thero, tindex); });
