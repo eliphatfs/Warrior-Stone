@@ -143,7 +143,7 @@ function drawCard(hero, count) {
             if (myDeck.length === 0) {
                 doAlert("你受到了" + me.nextFatigue + "点疲劳伤害");
                 gameHistory = "你受到了" + me.nextFatigue + "点疲劳伤害\n" + gameHistory;
-                dealDamage(target, -1, me.nextFatigue, "疲劳");
+                spellAttack(me.nextFatigue, target, -1, "疲劳");
                 ++me.nextFatigue;
                 continue;
             }
@@ -160,7 +160,8 @@ function drawCard(hero, count) {
             if (enemyDeck.length === 0) {
                 doAlert("敌方英雄受到了" + enemy.nextFatigue + "点疲劳伤害");
                 gameHistory = "敌方英雄受到了" + enemy.nextFatigue + "点疲劳伤害\n" + gameHistory;
-                dealDamage(myFriend(), -1, enemy.nextFatigue, "疲劳");
+                spellAttack(enemy.nextFatigue, myFriend(), -1, "疲劳");
+                // dealDamage(myFriend(), -1, enemy.nextFatigue, "疲劳");
                 ++enemy.nextFatigue;
                 continue;
             }
