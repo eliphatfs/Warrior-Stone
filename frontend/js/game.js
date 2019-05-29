@@ -318,7 +318,7 @@ function getMinionPosByTimeStampRegioned(ts, mine, his) {
     return null;
 }
 
-function dealDamage(hero, index, damage, source) {
+function dealDamage(hero, index, damage, source, noHurtEvent) {
     if (index !== -1)
         queueShowDamage(hero, getMinion(hero, index).timeStamp, damage);
     else
@@ -347,6 +347,7 @@ function dealDamage(hero, index, damage, source) {
             var he = hero === target ? me : enemy;
             if (he.minionNoDeath) {
                 minion[index].health = 1;
+                if (!noHurtEvent)
                 attackEventQueue.push([minion[index].timeStamp, function() {
                     for (var h=1; h<=2; h++)
                         for (var i=0; i<7; i++) {
@@ -359,6 +360,7 @@ function dealDamage(hero, index, damage, source) {
                 }]);
             }
             else {
+                if (!noHurtEvent)
                 attackEventQueue.push([minion[index].timeStamp, function() {
                     for (var h=1; h<=2; h++)
                         for (var i=0; i<7; i++) {
@@ -501,17 +503,17 @@ function simpleAttack(srch, srci, dsth, dsti) {
     pack();
 }
 
-function spellAttack(dmg, dsth, dsti, srcDisp) {
+function spellAttack(dmg, dsth, dsti, srcDisp, noHurtEvent) {
     var pack = function() {
-        dealDamage(dsth, dsti, dmg, srcDisp || "");
+        dealDamage(dsth, dsti, dmg, srcDisp || "", noHurtEvent);
         flushAttackQueue();
     };
     pack();
 }
 
-function spellAttackNoFlushQueue(dmg, dsth, dsti, srcDisp) {
+function spellAttackNoFlushQueue(dmg, dsth, dsti, srcDisp, noHurtEvent) {
     var pack = function() {
-        dealDamage(dsth, dsti, dmg, srcDisp || "");
+        dealDamage(dsth, dsti, dmg, srcDisp || "", noHurtEvent);
     };
     pack();
 }

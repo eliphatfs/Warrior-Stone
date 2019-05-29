@@ -65,7 +65,7 @@ function killInperfect(eventData, extras, isWrite, then) {
             extras.push(tindex);
             extras.push(getMinion(thero, tindex).health);
             delayedCall(function(){
-                spellAttack(getMinion(thero, tindex).health, thero, tindex, "你使用斩杀");
+                spellAttack(getMinion(thero, tindex).health, thero, tindex, "你使用斩杀", true);
             });
             delayedCall(function(){
                 then(eventData, extras, isWrite);
@@ -76,7 +76,7 @@ function killInperfect(eventData, extras, isWrite, then) {
         var ind = extras.shift();
         var dmg = extras.shift();
         delayedCall(function(){
-            spellAttack(dmg, h, ind, "敌方使用斩杀");
+            spellAttack(dmg, h, ind, "敌方使用斩杀", true);
         });
         delayedCall(function() {
             then(eventData, extras, isWrite);
@@ -211,7 +211,7 @@ function messyFight(eventData, extras, isWrite, then) {
                 for (var i=0; i<7; i++) {
                     if (keepI == i && keepH == h) continue;
                     if (!getMinion(h, i)) continue;
-                    spellAttackNoFlushQueue(getMinion(h, i).health, h, i, "你使用绝命乱斗");
+                    spellAttackNoFlushQueue(getMinion(h, i).health, h, i, "你使用绝命乱斗", true);
                 }
             }
             flushAttackQueue();
@@ -223,7 +223,7 @@ function messyFight(eventData, extras, isWrite, then) {
                 for (var i=0; i<7; i++) {
                     if (keepI == i && keepH == h) continue;
                     if (!getMinion(h, i)) continue;
-                    spellAttackNoFlushQueue(getMinion(h, i).health, h, i, "敌方英雄使用绝命乱斗");
+                    spellAttackNoFlushQueue(getMinion(h, i).health, h, i, "敌方英雄使用绝命乱斗", true);
                 }
             }
             flushAttackQueue();
@@ -415,6 +415,7 @@ function silenceMinion(minion) {
     minion.roundend = 0;
     minion.hurtevent = 0;
     minion.feature = 0;
+    minion.damage = minion.card.damage;
 }
 
 // 猫头鹰
